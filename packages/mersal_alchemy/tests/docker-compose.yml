@@ -1,0 +1,17 @@
+
+version: "3"
+
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5423:5432" # use a non-standard port here
+    environment:
+      POSTGRES_PASSWORD: super-secret
+    volumes:
+      - pg_testing_data:/var/lib/postgresql/data
+volumes:
+  pg_testing_data:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

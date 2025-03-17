@@ -1,0 +1,16 @@
+from collections.abc import Sequence
+from typing import Any, Protocol
+
+__all__ = ("ErrorTracker",)
+
+
+class ErrorTracker(Protocol):
+    async def register_error(self, message_id: Any, exception: Exception) -> None: ...
+
+    async def clean_up(self, message_id: Any) -> None: ...
+
+    async def has_failed_too_many_times(self, message_id: Any) -> bool: ...
+
+    async def mark_as_final(self, message_id: Any) -> None: ...
+
+    async def get_exceptions(self, message_id: Any) -> Sequence[Exception]: ...

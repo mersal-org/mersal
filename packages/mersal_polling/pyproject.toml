@@ -1,0 +1,33 @@
+[project]
+name = "mersal-polling"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Abdulhaq Emhemmed", email = "abdulhaq.emhemmed@gmail.com" }
+]
+dependencies = [
+"mersal",
+]
+readme = "README.md"
+requires-python = ">= 3.10"
+
+[dependency-groups]
+dev = [
+"pytest",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+managed = true
+
+[tool.uv.sources]
+mersal = { workspace = true }
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mersal_polling"]
