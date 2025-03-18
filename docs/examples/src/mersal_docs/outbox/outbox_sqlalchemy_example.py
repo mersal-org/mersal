@@ -96,7 +96,7 @@ async def app_factory() -> Mersal:
     outbox_storage = SQLAlchemyOutboxStorageConfig(
         async_session_factory=session_factory,
         table_name="outbox",
-        session_extractor=lambda transaction_context: cast(AsyncSession, transaction_context.items.get("db-session")),
+        session_extractor=lambda transaction_context: cast("AsyncSession", transaction_context.items.get("db-session")),
     ).storage
     queue_address = "test-queue"
     transport = InMemoryTransportConfig(network=NETWORK, input_queue_address=queue_address).transport

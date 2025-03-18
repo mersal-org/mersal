@@ -68,6 +68,7 @@ log_cli = true
 include = [
   "core/**/*.{py,pyi}",
   "packages/**/*.{py,pyi}",
+  "docs/examples/**/*.{py,pyi}",
   "pyproject.toml"
 ]
 target-version = "py310"

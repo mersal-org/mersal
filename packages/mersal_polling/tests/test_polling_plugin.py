@@ -194,7 +194,10 @@ class TestPollingPlugin:
                         Message1CompletedSuccessfully: SuccessfulCompletionCorrelation(),
                         Message2CompletedSuccessfully: SuccessfulCompletionCorrelation(),
                     },
-                    exclude_from_completion_events={Message1, Message2,}
+                    exclude_from_completion_events={
+                        Message1,
+                        Message2,
+                    },
                 ).plugin
             ],
         )

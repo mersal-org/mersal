@@ -1,14 +1,13 @@
 import pytest
 from anyio import sleep
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import async_sessionmaker
-
 from mersal_docs.unit_of_work.unit_of_work_sqlalchemy_example import (
     AddUser,
     User,
     app_factory,
     engine,
 )
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 __all__ = ("test_unit_of_work_using_sqlalchemy",)
 
