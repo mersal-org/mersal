@@ -45,7 +45,7 @@ install: destroy clean                              ## Install the project, depe
 	@echo "${INFO} Starting fresh installation..."
 	@uv python pin 3.13 >/dev/null 2>&1
 	@uv venv >/dev/null 2>&1
-	@uv sync --all-extras --dev
+	@uv sync --all-extras --dev --all-packages
 	@echo "${OK} Installation complete! 🎉"
 
 .PHONY: destroy

@@ -23,7 +23,7 @@ jobs:
         run: uv python install 3.13
 
       - name: Create virtual environment
-        run: uv sync --all-extras --dev
+        run: uv sync --all-extras --dev --all-packages
 
       - name: Install Pre-Commit hooks
         run: uv run pre-commit install
