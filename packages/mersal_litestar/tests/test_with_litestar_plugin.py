@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from litestar import Litestar, post
@@ -14,7 +16,6 @@ from mersal.persistence.in_memory import (
     InMemorySubscriptionStorage,
     InMemorySubscriptionStore,
 )
-from mersal.pipeline import MessageContext
 from mersal.transport.in_memory import InMemoryNetwork
 from mersal.transport.in_memory.in_memory_transport_plugin import (
     InMemoryTransportPluginConfig,
@@ -24,6 +25,9 @@ from mersal_polling import (
     DefaultPoller,
     PollingConfig,
 )
+
+if TYPE_CHECKING:
+    from mersal.pipeline import MessageContext
 
 __all__ = (
     "Message1",

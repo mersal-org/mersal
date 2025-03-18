@@ -6,10 +6,11 @@ from typing import TYPE_CHECKING
 from litestar.di import Provide
 from litestar.plugins import InitPluginProtocol
 
+from mersal.app import Mersal  # noqa: TC001
+
 if TYPE_CHECKING:
     from litestar.config.app import AppConfig
 
-    from mersal.app import Mersal
 
 __all__ = (
     "LitestarMersalPlugin",
@@ -34,8 +35,13 @@ class LitestarMersalPlugin(InitPluginProtocol):
     def on_app_init(self, app_config: AppConfig) -> AppConfig:
         app_config.lifespan.extend(self._config.app_instances.values())
         if self._config.inject_instances:
-            app_config.dependencies.update(
-                **{k: Provide(lambda v=v: v, sync_to_thread=False) for k, v in self._config.app_instances.items()}
-            )
+            dependencies: dict[str, Provide] = {}
+            for k, v in self._config.app_instances.items():
+
+                def provide_app(app: Mersal = v) -> Mersal:
+                    return app
+
+                dependencies[k] = Provide(provide_app, sync_to_thread=False)
+            app_config.dependencies.update(**dependencies)
 
         return app_config
