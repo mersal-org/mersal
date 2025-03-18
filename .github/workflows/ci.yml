@@ -95,11 +95,12 @@ jobs:
       fail-fast: true
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
+        os: ["ubuntu-latest"]
     uses: ./.github/workflows/test.yml
     with:
       coverage: false # ${{ matrix.python-version == '3.13' }}
       python-version: ${{ matrix.python-version }}
-      os: ["ubuntu-latest"]
+      os: ${{ matrix.os }}
 
   build-docs:
     needs:
