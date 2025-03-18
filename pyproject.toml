@@ -169,7 +169,6 @@ convention = "google"
 known-first-party = [
 "mersal",
 "mersal_testing",
-"mersal_docs",
 "mersal_polling",
 "mersal_alchemy",
 "mersal_msgspec",
@@ -208,7 +207,6 @@ packages = [
   "mersal_litestar",
   "mersal_alchemy",
   "mersal_msgspec",
-  "mersal_docs",
 ]
 disallow_any_generics = false
 local_partial_types = true
