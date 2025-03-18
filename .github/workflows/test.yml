@@ -58,7 +58,7 @@ jobs:
 
       - name: Test
         if: ${{ !inputs.coverage }}
-        run: uv run makte test-all
+        run: uv run make test-all
 
       # - name: Test with coverage
       #   if: ${{ inputs.coverage }}
