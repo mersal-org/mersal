@@ -19,11 +19,8 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Set up Python
-        run: uv python install 3.13
-
-      - name: Create virtual environment
-        run: uv sync --all-extras --dev --all-packages
+      - name: Set up Python and create virtual environment
+        run: make install
 
       - name: Install Pre-Commit hooks
         run: uv run pre-commit install
@@ -46,11 +43,8 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Set up Python
-        run: uv python install 3.13
-
-      - name: Install dependencies
-        run: uv sync --all-extras --dev
+      - name: Set up Python and create virtual environment
+        run: make install
 
       - name: Run mypy
         run: uv run mypy
@@ -63,11 +57,8 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Set up Python
-        run: uv python install 3.13
-
-      - name: Install dependencies
-        run: uv sync --all-extras --dev
+      - name: Set up Python and create virtual environment
+        run: make install
 
       - name: Run pyright
         run: uv run basedpyright
@@ -114,11 +105,8 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Set up Python
-        run: uv python install 3.13
-
-      - name: Install dependencies
-        run: uv sync --all-extras --dev
+      - name: Set up Python and create virtual environment
+        run: make install
 
       - name: Build docs
         run: uv run make docs
