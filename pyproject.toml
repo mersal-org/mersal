@@ -186,6 +186,10 @@ packages = ["core/src/mersal", "core/testing/mersal_testing"]
 [tool.hatch.metadata]
 allow-direct-references = true
 
+[tool.hatch.build.targets.sdist]
+dev-mode-dirs = ["."]
+exclude = ["/.github", "/docs"]
+
 # Type checking configuration
 [tool.mypy]
 python_version = "3.10"
