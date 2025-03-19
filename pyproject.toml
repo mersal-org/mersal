@@ -1,7 +1,7 @@
 [project]
 name = "mersal"
 version = "0.1.0"
-description = "Add your description here"
+description = "A service bus library."
 authors = [
     { name = "Abdulhaq Emhemmed", email = "abdulhaq.emhemmed@gmail.com" }
 ]
