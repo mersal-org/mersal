@@ -80,7 +80,7 @@ lock:                                              ## Rebuild lockfiles from scr
 .PHONY: build
 build:                                             ## Build the package
 	@echo "${INFO} Building package... 📦"
-	@uv build >/dev/null 2>&1
+	@uv build --all-packages >/dev/null 2>&1
 	@echo "${OK} Package build complete"
 
 .PHONY: release
