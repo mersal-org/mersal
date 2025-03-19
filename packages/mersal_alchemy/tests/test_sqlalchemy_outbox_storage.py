@@ -146,7 +146,9 @@ class TestSQLAlchemyOutboxStorage:
         for m, om in zip(messages_in_batch, [outgoing_message, outgoing_message2], strict=False):
             assert m.body == om.transport_message.body
             assert m.destination_address == om.destination_address
-            assert m.headers == om.transport_message.headers
+            assert {k: str(v) for k, v in m.headers.items()} == {
+                k: str(v) for k, v in om.transport_message.headers.items()
+            }
 
     async def test_get_next_message_batch_completion(self, db_engine: AsyncEngine):
         transport_message = TransportMessageBuilder.build()

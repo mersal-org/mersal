@@ -39,7 +39,7 @@ class MsgspecSerializer(Serializer):
 
         if unwrapped.type == "dict":
             _data = cast("dict", unwrapped.object)
-            return msgspec.json.decode(_data)  # type: ignore[call-overload] # pyright: ignore[reportCallIssue, reportArgumentType]
+            return msgspec.to_builtins(_data)  # type: ignore[call-overload] # pyright: ignore[reportCallIssue, reportArgumentType]
 
         object_type = self._name_to_type.get(unwrapped.type)
         return msgspec.json.decode(unwrapped.object, type=object_type)  # type: ignore[arg-type] # pyright: ignore[reportCallIssue, reportArgumentType]
