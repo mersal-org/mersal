@@ -23,10 +23,6 @@ dev = [
     "trio",
 ]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [tool.uv]
 managed = true
 
@@ -36,9 +32,3 @@ mersal_polling = { workspace = true }
 mersal_alchemy = { workspace = true }
 mersal_litestar = { workspace = true }
 mersal_msgspec = { workspace = true }
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/mersal_docs"]
