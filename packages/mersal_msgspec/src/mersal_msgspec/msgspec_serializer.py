@@ -32,7 +32,9 @@ class MsgspecSerializer(Serializer):
         else:
             _type = type(obj).__name__
             _object = obj
-        return self._encoder.encode(self.ObjectWrapper(type=_type, object=_object))
+
+        encoded_object = self._encoder.encode(_object)
+        return self._encoder.encode(self.ObjectWrapper(type=_type, object=msgspec.Raw(encoded_object)))
 
     def deserialize(self, data: Any) -> Any:
         unwrapped = self._decoder.decode(data)
@@ -42,4 +44,4 @@ class MsgspecSerializer(Serializer):
             return msgspec.to_builtins(_data)  # type: ignore[call-overload] # pyright: ignore[reportCallIssue, reportArgumentType]
 
         object_type = self._name_to_type.get(unwrapped.type)
-        return msgspec.json.decode(unwrapped.object, type=object_type)  # type: ignore[arg-type] # pyright: ignore[reportCallIssue, reportArgumentType]
+        return msgspec.convert(unwrapped.object, type=object_type)  # type: ignore[arg-type] # pyright: ignore[reportCallIssue, reportArgumentType]

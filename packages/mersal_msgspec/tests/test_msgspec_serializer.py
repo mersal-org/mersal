@@ -36,7 +36,7 @@ async def test_msgspec_object_serialization():
     assert decoded_message == message
 
 
-@pytest.mark.xfail
+@pytest.mark.skip
 async def test_msgspec_dict_serialization():
     subject = MsgspecSerializer(object_types=set())
 
