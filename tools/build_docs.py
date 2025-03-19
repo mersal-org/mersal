@@ -77,14 +77,6 @@ def build(output_dir: str, version: str | None) -> None:
         shutil.copytree(docs_src_path, Path(output_dir) / "latest", dirs_exist_ok=True)
     shutil.copytree(docs_src_path, Path(output_dir) / version, dirs_exist_ok=True)
 
-    # copy existing versions into our output dir to preserve them when cleaning the branch
-    with checkout("gh-pages", skip=True):
-        for other_version in [*version_spec["versions"], "latest"]:
-            other_version_path = Path(other_version)
-            other_version_target_path = Path(output_dir) / other_version
-            if other_version_path.exists() and not other_version_target_path.exists():
-                shutil.copytree(other_version_path, other_version_target_path)
-
 
 def main() -> None:
     args = parser.parse_args()
