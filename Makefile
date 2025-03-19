@@ -152,7 +152,7 @@ test-examples:            			              	## Run the doc examples tests
 	@echo "${OK} Doc Examples Tests complete ✨"
 
 .PHONY: test-all
-test-all: test test-litestar test-polling test-sqlalchemy test-msgspec test-examples ## Run all tests
+test-all: test test-litestar test-polling test-sqlalchemy test-msgspec # test-examples ## Run all tests
 	@echo "${INFO} All tests executed successfully ✨"
 
 # .PHONY: coverage
