@@ -11,3 +11,4 @@ class MessageHandlerThatCounts:
 
     async def __call__(self, message: Any) -> None:
         self.count += 1
+        self.message = message

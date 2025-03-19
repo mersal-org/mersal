@@ -13,14 +13,10 @@ from mersal.lifespan.autosubscribe import AutosubscribeConfig
 from mersal.messages import MessageCompletedEvent
 from mersal.persistence.in_memory import (
     InMemorySubscriptionStorage,
-    InMemorySubscriptionStore,
 )
 from mersal.pipeline import MessageContext
 from mersal.serialization.serializers import Serializer
-from mersal.transport.in_memory import InMemoryNetwork, InMemoryTransport
-from mersal.transport.in_memory.in_memory_transport_plugin import (
-    InMemoryTransportPluginConfig,
-)
+from mersal.transport.in_memory import InMemoryTransport
 from mersal_polling import (
     DefaultPoller,
     PollerWithTimeout,
@@ -31,15 +27,12 @@ from mersal_polling.config import (
     FailedCompletionCorrelation,
     SuccessfulCompletionCorrelation,
 )
-from mersal_testing.app_runner_helper import AppRunnerHelper
+from mersal_testing.message_handlers.message_handler_that_counts import MessageHandlerThatCounts
 
 __all__ = (
-    "DummyMessage",
-    "DummyMessageHandler",
     "Message1",
     "Message1CompletedSuccessfully",
     "Message1FailedToComplete",
-    "MessageCompletedEventHandler",
     "MessageHandler",
     "MessageHandlerThatPublishes",
     "SlowHandler",
@@ -49,32 +42,6 @@ __all__ = (
 
 
 pytestmark = pytest.mark.anyio
-
-
-class DummyMessage:
-    def __init__(self):
-        self.internal = []
-
-
-class DummyMessageHandler:
-    def __init__(self, delay: int | None = None) -> None:
-        self.delay = delay
-        self.call_count = 0
-
-    async def __call__(self, message: DummyMessage):
-        if self.delay is not None:
-            await anyio.sleep(self.delay)
-        message.internal.append(1)
-        self.call_count += 1
-
-
-class MessageCompletedEventHandler:
-    def __init__(self) -> None:
-        self.call_count = 0
-
-    async def __call__(self, event: MessageCompletedEvent):
-        self.call_count += 1
-        self.event = event
 
 
 class Message1:
@@ -149,6 +116,12 @@ class TestPollingPlugin:
     ):
         activator = BuiltinHandlerActivator()
         poller = DefaultPoller()
+        message_handler = MessageHandlerThatCounts()
+        completion_event_handler = MessageHandlerThatCounts()
+        activator.register(Message1, lambda __, _: message_handler)
+        activator.register(MessageCompletedEvent, lambda _, __: completion_event_handler)
+        message1_id = uuid.uuid4()
+
         app = Mersal(
             "m1",
             activator,
@@ -156,19 +129,34 @@ class TestPollingPlugin:
             serializer=serializer,
             subscription_storage=in_memory_subscription_storage,
             autosubscribe=AutosubscribeConfig(set()),
-            plugins=[PollingConfig(poller).plugin],
+            plugins=[
+                PollingConfig(
+                    poller,
+                    auto_publish_completion_events=True,
+                ).plugin
+            ],
         )
-        handler = MessageHandler()
-        activator.register(Message1, lambda __, _: handler)
-        message_id = uuid.uuid4()
         await app.start()
 
-        await app.send_local(Message1(), headers={"message_id": message_id})
-        # Make sure the message is processed before polling
-        await anyio.sleep(0.1)
-        result = await poller.poll(message_id)
+        await anyio.sleep(0.5)
+
+        await app.send_local(Message1(), headers={"message_id": message1_id})
+
+        await anyio.sleep(0.5)
+
+        assert message_handler.count == 1
+        assert completion_event_handler.count == 1
+        assert isinstance(completion_event_handler.message, MessageCompletedEvent)
+        assert completion_event_handler.message.completed_message_id == message1_id
+
+        result = await poller.poll(message1_id)
         assert result
         assert not result.exception
+
+        await app.send_local(Message1(), headers={"message_id": uuid.uuid4()})
+        await anyio.sleep(0.5)
+        assert message_handler.count == 2
+        assert completion_event_handler.count == 2
 
         await app.stop()
 
@@ -347,148 +335,51 @@ class TestPollingPlugin:
 
         await app.stop()
 
-    # Tests copied from test_using_activator_with_auto_completion_sending.py
-    # but using regular BuiltinHandlerActivator with PollingPlugin instead
-    async def test_auto_completion_event_with_polling_plugin(self):
-        network = InMemoryNetwork()
-        queue_address = "test-queue"
-        message = DummyMessage()
-
-        # Use regular BuiltinHandlerActivator instead of auto-completion one
+    async def test_auto_completion_event_with_polling_plugin_excluded(
+        self,
+        in_memory_transport: InMemoryTransport,
+        in_memory_subscription_storage: InMemorySubscriptionStorage,
+        serializer: Serializer,
+    ):
         activator = BuiltinHandlerActivator()
+        message = Message1()
 
-        event_handler = MessageCompletedEventHandler()
-        activator.register(MessageCompletedEvent, lambda _, __: event_handler)
+        completion_event_handler = MessageHandlerThatCounts()
+        activator.register(MessageCompletedEvent, lambda _, __: completion_event_handler)
 
-        handler = DummyMessageHandler()
-        activator.register(DummyMessage, lambda m, b: handler)
+        message_handler = MessageHandlerThatCounts()
+        activator.register(Message1, lambda m, b: message_handler)
 
-        subscription_store = InMemorySubscriptionStore()
-        poller = DefaultPoller()
-
-        # Configure the polling plugin with auto_publish_completion_events=True
-        plugins = [
-            InMemoryTransportPluginConfig(network, queue_address).plugin,
-            PollingConfig(poller, auto_publish_completion_events=True).plugin,
-        ]
-
-        app = Mersal(
-            "m1",
-            activator,
-            plugins=plugins,
-            subscription_storage=InMemorySubscriptionStorage.centralized(subscription_store),
-        )
-
-        app_runner = AppRunnerHelper(app)
-        await app.subscribe(MessageCompletedEvent)
-        await app_runner.run()
-
-        message_id = uuid.uuid4()
-        await app.send_local(message, headers={"message_id": message_id})
-
-        await anyio.sleep(0.1)
-        await app_runner.stop()
-
-        assert handler.call_count == 1
-        assert event_handler.call_count == 1
-        assert event_handler.event.completed_message_id == message_id
-
-        # Also verify we can poll for the message
-        result = await poller.poll(message_id)
-        assert result
-        assert not result.exception
-
-    async def test_auto_completion_event_with_polling_plugin_multiple_handlers(self):
-        network = InMemoryNetwork()
-        queue_address = "test-queue"
-
-        # Use regular BuiltinHandlerActivator instead of auto-completion one
-        activator = BuiltinHandlerActivator()
-        message = DummyMessage()
-
-        event_handler = MessageCompletedEventHandler()
-        activator.register(MessageCompletedEvent, lambda _, __: event_handler)
-
-        handler = DummyMessageHandler()
-        activator.register(DummyMessage, lambda m, b: handler)
-        activator.register(DummyMessage, lambda m, b: handler)
-
-        subscription_store = InMemorySubscriptionStore()
         poller = DefaultPoller()
 
         plugins = [
-            InMemoryTransportPluginConfig(network, queue_address).plugin,
-            PollingConfig(poller, auto_publish_completion_events=True).plugin,
-        ]
-
-        app = Mersal(
-            "m1",
-            activator,
-            plugins=plugins,
-            subscription_storage=InMemorySubscriptionStorage.centralized(subscription_store),
-        )
-
-        app_runner = AppRunnerHelper(app)
-        await app.subscribe(MessageCompletedEvent)
-        await app_runner.run()
-
-        message_id = uuid.uuid4()
-        await app.send_local(message, headers={"message_id": message_id})
-
-        await anyio.sleep(0.1)
-        await app_runner.stop()
-
-        assert handler.call_count == 2
-        assert event_handler.call_count == 1
-        assert event_handler.event.completed_message_id == message_id
-
-    async def test_auto_completion_event_with_polling_plugin_excluded(self):
-        network = InMemoryNetwork()
-        queue_address = "test-queue"
-
-        # Use regular BuiltinHandlerActivator
-        activator = BuiltinHandlerActivator()
-        message = DummyMessage()
-
-        event_handler = MessageCompletedEventHandler()
-        activator.register(MessageCompletedEvent, lambda _, __: event_handler)
-
-        handler = DummyMessageHandler()
-        activator.register(DummyMessage, lambda m, b: handler)
-
-        subscription_store = InMemorySubscriptionStore()
-        poller = DefaultPoller()
-
-        # Configure the polling plugin with DummyMessage excluded
-        plugins = [
-            InMemoryTransportPluginConfig(network, queue_address).plugin,
             PollingConfig(
-                poller, auto_publish_completion_events=True, exclude_from_completion_events={DummyMessage}
+                poller,
+                auto_publish_completion_events=True,
+                exclude_from_completion_events={Message1},
             ).plugin,
         ]
 
         app = Mersal(
             "m1",
             activator,
+            transport=in_memory_transport,
+            serializer=serializer,
+            subscription_storage=in_memory_subscription_storage,
             plugins=plugins,
-            subscription_storage=InMemorySubscriptionStorage.centralized(subscription_store),
         )
 
-        app_runner = AppRunnerHelper(app)
-        await app.subscribe(MessageCompletedEvent)
-        await app_runner.run()
+        await app.start()
 
         message_id = uuid.uuid4()
         await app.send_local(message, headers={"message_id": message_id})
 
         await anyio.sleep(0.1)
-        await app_runner.stop()
+        await app.stop()
 
-        assert handler.call_count == 1
-        # No completion event should be sent since DummyMessage is excluded
-        assert event_handler.call_count == 0
+        assert message_handler.count == 1
+        assert completion_event_handler.count == 0
 
-        # Verify we can't poll for the message (no result)
         _poller = PollerWithTimeout(poller)
         with pytest.raises(PollingTimeoutError):
             _ = await _poller.poll(message_id, 1)
