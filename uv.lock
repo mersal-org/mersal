@@ -769,7 +769,7 @@ dev = [
 [[package]]
 name = "mersal-docs"
 version = "0.1.0"
-source = { editable = "docs/examples" }
+source = { virtual = "docs/examples" }
 dependencies = [
     { name = "mersal" },
     { name = "mersal-alchemy" },
