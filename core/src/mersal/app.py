@@ -223,6 +223,7 @@ class Mersal:
         command_message: Any,
         headers: Mapping[str, Any] | None = None,
     ) -> None:
+        """Send a message to an address obtained from the configured router."""
         logical_message = self._create_message(command_message, headers)
 
         destination_address = await self.router.get_destination_address(logical_message)
@@ -240,6 +241,7 @@ class Mersal:
         command_message: Any,
         headers: Mapping[str, Any] | None = None,
     ) -> None:
+        """Send a message to the address of the configured transport."""
         self.logger.info(
             "The app named '%r' is about to send %r locally",
             self.name,

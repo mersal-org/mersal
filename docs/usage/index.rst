@@ -13,9 +13,11 @@ Usage
    routing
    error_handling
    message_context
+   message_headers
    idempotency
    outbox
    unit_of_work
    transport_bridge
    transactions
    pipeline
+   contrib/index

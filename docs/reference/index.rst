@@ -6,6 +6,7 @@ API reference
     :titlesonly:
     :maxdepth: 1
 
+    app
     activation
     idempotency
     outbox
