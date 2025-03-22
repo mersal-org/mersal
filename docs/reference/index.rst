@@ -6,6 +6,7 @@ API reference
     :titlesonly:
     :maxdepth: 1
 
+    activation
     idempotency
     outbox
     threading

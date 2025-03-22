@@ -9,7 +9,7 @@ from mersal.pipeline import MessageContext
 # Define a type variable for messages
 MessageT = TypeVar("MessageT")
 
-# A factory function that creates message handlers
+#: A factory function that creates message handlers
 HandlerFactory: TypeAlias = Callable[
     [MessageContext, "Mersal"],
     MessageHandler[MessageT],

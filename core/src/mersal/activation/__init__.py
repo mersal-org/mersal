@@ -6,9 +6,10 @@ dispatches messages to the appropriate handlers.
 """
 
 from mersal._activation.builtin_handler_activator import BuiltinHandlerActivator
-from mersal._activation.handler_activator import HandlerActivator
+from mersal._activation.handler_activator import HandlerActivator, HandlerFactory
 
 __all__ = (
     "BuiltinHandlerActivator",
     "HandlerActivator",
+    "HandlerFactory",
 )
