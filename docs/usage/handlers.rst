@@ -9,7 +9,7 @@ When a message is :doc:`received <receiving>`, the configured incoming :doc:`pip
 
 Message handlers in Mersal are simply callables that define the message as the only parameter and it should process the message as required without returning anything. The callable should be asynchronous but support for synchronous handlers is tracked at `#23 <https://github.com/mersal-org/mersal/issues/23>`_ (please feel free to try it out, it might be actually working!)
 
-Since handlers can be any callable, we are free to choose function or class based handlers (or do some ninja meta-programming moves and that somehow generates a handler. As long is it can be called and accepts the message as an argument then it works!)
+Since handlers can be any callable, we are free to choose function or class based handlers (or do some ninja meta-programming moves that somehow generates a handler. As long is it can be called and accepts the message as an argument then it works!)
 
 Function-based Handlers
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -54,7 +54,7 @@ Registering Message Handlers
 
 So the incoming message pipeline executes the handlers as one of its many steps. How does it know which handlers to invoke? We must tell the Mersal app which handlers are associated with which message types. This is the purpose of :class:`HandlerActivator <.activation.HandlerActivator>`.
 
-We use the :py:meth:`~.activation.HandlerActivator.register` to associate message types with handlers. Mersal provides an implementation of a handler activator that should cover majority of use-cases via :class:`BuiltinHandlerActivator <.activation.BuiltinHandlerActivator>`.
+We use its :py:meth:`~.activation.HandlerActivator.register` method to associate message types with handlers. Mersal provides an implementation of a handler activator that should cover majority of use-cases via :class:`BuiltinHandlerActivator <.activation.BuiltinHandlerActivator>`.
 
 Notice that the method for registration takes a sync callable as the second argument. This is **not** our message handler but a factory that should generate the handler (hence why it's named `factory` of type `HandlerFactory`). Lets forget about that part for a moment and see an example of registering message handlers.
 
@@ -121,6 +121,17 @@ You can register multiple handlers for the same message type, and all handlers w
     activator.register(SubmitOrderCommand, lambda _, __: SubmitOrderCommandNotificationHandler())
 
 The invocations are guaranteed to follow the order of registration (but perhaps it isn't a wise decision to rely on such guarantee from a business perspective.)
+
+Same Handler for Multiple Message Types
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Just like the fact that messages can be handled by multiple handlers. A single handler can process multiple type of messages.
+
+.. code-block:: python
+
+    # Register the same handler type for different messages
+    activator.register(SubmitOrderCommand, lambda _, __: SubmitAndRejectOrderCommandHandler())
+    activator.register(RejectOrderCommand, lambda _, __: SubmitAndRejectOrderCommandHandler())
 
 Handlers with Message Context and Mersal app instance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
