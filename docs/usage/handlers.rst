@@ -136,6 +136,8 @@ Just like the fact that messages can be handled by multiple handlers. A single h
 Handlers with Message Context and Mersal app instance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. _handlers_with_app:
+
 Handlers can access both the :doc:`message context <message_context>` and the :doc:`Mersal app <app>` instance. The first allow the handler to obtain information about the message (see relevant docs) and the other allows for invoking Mersal app functionalities inside the message handler (e.g. send/publish a message.)
 
 The message context and Mersal app instance are the parameters we skipped earlier that are part of the handler factory.

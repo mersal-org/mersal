@@ -1,87 +1,106 @@
 Receiving Messages
-=================
+====================
 
-..
-   Overview
-   --------
+Overview
+-----------
 
-   Receiving and processing messages is a core functionality of Mersal. Messages are received by configuring handlers to process specific message types.
+With the Mersal app setup and :ref:`started <starting_app>`, and message handlers are registered. Any messages sent to the transport with our configured address will be fetched and processed using the registered handlers.
 
-   Key Features:
+What can send a message to the transport?
+-------------------------------------------
 
-   * Register handlers for specific message types
-   * Support for multiple handlers per message type
-   * Automatic message deserialization
-   * Access to message headers and context
+While we can use a Mersal app to :doc:`send <sending>` a message via the transport to any address we desire. That's not the only way!
 
-   Defining Message Handlers
-   ------------------------
+Another system written in a completely different language could have sent the message. It could have been a 3rd party application.
+
+This is the power of message driven systems. It allows for loose coupling between systems where they only share a "post office" that exchanges messages between them.
+
+How are messages received?
+----------------------------
+
+The actual component that is responsible for receiving messages is the Mersal :doc:`worker <workers>`. This is why we need to start the Mersal app since internally that starts the workers among other things.
+
+The current available worker polls the transport for new messages (so it's a pull based mechanism). This aligns well with the way most transports work (pull based). Support for push based transports (e.g GCP Pub/Sub in push mode) is tracked in `#26 <https://github.com/mersal-org/mersal/issues/26>`_.
+
+Once the transport has a message, the worker will pull it and the incoming :doc:`pipeline <pipeline>` is activated to process the message.
 
 
+Processing Flow
+-----------------
 
-   Starting the Application to Receive Messages
-   ------------------------------------------
+The following describes roughly what the default incoming message pipeline does:
 
-   To start processing messages, you need to start the Mersal application:
+1. The whole processing is wrapped with error handling
+2. The message is deserialized if necessary
+3. Appropriate handlers are activated based on the message type
+4. After all handlers complete, the message is acknowledged
 
-   .. code-block:: python
 
-       # Start the application and process messages
-       await app.start()
+For more details on the message processing pipeline, see :doc:`pipeline`.
 
-       # ... application runs and processes messages ...
+Error Handling
+-----------------
 
-       # Stop the application when done
-       await app.stop()
+By default, if a handler raises an exception, the message processing is considered failed. Mersal provides several error handling strategies, including retries and dead-letter queues.
 
-   Using the Context Manager
-   ^^^^^^^^^^^^^^^^^^^^^^^^
+See :doc:`error_handling` for more details on how to handle failures in message processing.
 
-   Alternatively, you can use the application as an async context manager:
+Transaction Handling
+----------------------
 
-   .. code-block:: python
+Mersal wraps the receiving (and sending) process in a transaction to ensure that messages are processed reliably (think something like a DB transaction).
 
-       async with app:
-           # Application is started and processing messages
-           # Wait for some condition or simply sleep
-           await asyncio.sleep(60)  # Run for 60 seconds
-       # Application is automatically stopped when exiting the context
+The transaction can be either committed or rolledback. It can also be acknowledged (ack) or negative acknowledged (nack).
 
-   Processing Flow
-   -------------
+For the transport, acknowledging the transaction means we are telling the transport that we have completed processing this message and it can be removed from the queue. Negative acknowledgement means the transport will keep the message in the queue (depending on the transport implementation, the message might be moved to the back of the queue). Different transports will behave differently to ack and nack responses. This should be documented by each transport.
 
-   When a message is received:
+The transaction is acknowledged upon either successful processing or if the message has failed too many times and has been moved to the dead letter queue (see error handling).
 
-   1. The transport receives the message from the underlying message broker or in-memory queue
-   2. The message is deserialized if necessary
-   3. Appropriate handlers are activated based on the message type
-   4. Each handler is invoked with the message
-   5. After all handlers complete, the message is acknowledged
+Sending a message within a message handler
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   For more details on the message processing pipeline, see :doc:`pipeline`.
+As discussed previously, message handlers can :ref:`obtain <handlers_with_app>` the Mersal app instance in order to use it within the handler to publish/send messages.
 
-   Error Handling
-   ------------
+Because there is an ongoing transaction (started by receiving process), the sent/published messages are only sent when the transaction is committed. The transaction is only committed when the message handling is completed successfully.
 
-   By default, if a handler raises an exception, the message processing is considered failed. Mersal provides several error handling strategies, including retries and dead-letter queues.
+The following two examples are identical since the event is only published if the processing is completed without any errors.
 
-   See :doc:`error_handling` for more details on how to handle failures in message processing.
+.. code-block:: python
 
-   Transaction Handling
-   ------------------
+    class SubmitOrderCommandHandler:
+        def __init__(self, message_context: MessageContext, app: Mersal):
+            self.message_context = message_context
+            self.app = app
 
-   Messages are processed within a transaction context that coordinates acknowledgment and commits. This ensures that messages are only acknowledged when all handlers have successfully processed them.
+        async def __call__(self, order: SubmitOrderCommand) -> None:
 
-   For more details on transaction handling, see :doc:`transactions`.
+            # await process order
 
-   Summary
-   -------
+            # Processed the order...
+            await self.app.publish(OrderProcessedEvent(order_id: order.order_id))
 
-   Receiving messages in Mersal involves:
+.. code-block:: python
 
-   1. Defining message handlers (functions or classes)
-   2. Registering handlers with a handler activator
-   3. Creating and starting a Mersal application
-   4. Letting the application process messages automatically
+    class SubmitOrderCommandHandler:
+        def __init__(self, message_context: MessageContext, app: Mersal):
+            self.message_context = message_context
+            self.app = app
 
-   The message processing system is designed to be extensible and configurable, allowing you to adapt it to different messaging patterns and requirements.
+        async def __call__(self, order: SubmitOrderCommand) -> None:
+
+            # Processed the order...
+            await self.app.publish(OrderProcessedEvent(order_id: order.order_id))
+
+            # await process order
+
+It doesn't make a difference when we publish/send messages within a handler, it only happens after successful processing.
+
+If multiple messages are sent within a handler, they will be sent in the correct order.
+
+.. note::
+
+   But what happens if the message is processed successfully but the outgoing message fails to be sent, this will break business consistency!
+
+   This issue is solved with the :doc:`outbox <outbox>` pattern.
+
+For more details on transaction handling, see :doc:`transactions`.

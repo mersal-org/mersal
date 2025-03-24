@@ -20,4 +20,5 @@ Usage
    transport_bridge
    transactions
    pipeline
+   workers
    contrib/index
