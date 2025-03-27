@@ -13,4 +13,8 @@ API reference
     threading
     transport
     unit_of_work
+    subscription
+    persistence
+    autosubscribe
+    topic
     contrib/index

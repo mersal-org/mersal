@@ -95,6 +95,38 @@ class Mersal:
         pdb_on_exception: bool | None = None,
         message_id_generator: MessageIdGenerator | None = None,
     ):
+        """Initializes the Mersal app.
+
+        Args:
+            name: name of Mersal app, useful in logging.
+            autosubscribe: configuration for the autosubcription plugin.
+            handler_activator: HandlerActivator,
+            transport: Transport | None = None,
+            pipeline_invoker: PipelineInvoker | None = None,
+            router: Router | None = None,
+            worker_factory: WorkerFactory | None = None,
+            subscription_storage: SubscriptionStorage | None = None,
+            topic_name_convention: TopicNameConvention | None = None,
+            on_startup_hooks: Sequence[LifespanHook] | None = None,
+            on_shutdown_hooks: Sequence[LifespanHook] | None = None,
+            retry_strategy_settings: RetryStrategySettings | None = None,
+            error_tracker: ErrorTracker | None = None,
+            error_handler: ErrorHandler | None = None,
+            fail_fast_checker: FailFastChecker | None = None,
+            fail_fast_exceptions: Sequence[type[Exception]] | None = None,
+            plugins: Sequence[Plugin] | None = None,
+            idempotency: IdempotencyConfig | None = None,
+            saga: SagaConfig | EmptyType | None = None,
+            serializer: Serializer | None = None,
+            message_body_serializer: MessageBodySerializer | None = None,
+            message_headers_serializer: MessageHeadersSerializer | None = None,
+            default_router_registration: DefaultRouterRegistrationConfig | None = None,
+            unit_of_work: UnitOfWorkConfig | None = None,
+            outbox: OutboxConfig | None = None,
+            pdb_on_exception: bool | None = None,
+            message_id_generator: MessageIdGenerator | None = None,
+        """
+
         if router and default_router_registration:
             raise InvalidConfigurationError("Cannot provide both router and default_router_registration")
 
@@ -255,11 +287,15 @@ class Mersal:
         await self._send(set(addresses), logical_message)
 
     async def publish(self, event_message: Any, headers: Mapping[str, Any] | None = None) -> None:
+        """Publish an event with optional headers."""
+
         topic = self.topic_name_convention.get_topic_name(type(event_message))
 
         await self._inner_publish(topic, event_message, headers)
 
     async def subscribe(self, event_type: type) -> None:
+        """Subscribe to the passed event type."""
+
         topic = self.topic_name_convention.get_topic_name(event_type)
         await self._subscribe(topic)
 

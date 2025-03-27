@@ -13,7 +13,7 @@ It's important to note here that in message driven systems, sending and receivin
 
 Sending is typically initiated by some form of input. For example in a web application we send a message upon receiving a `POST` request to our defined endpoint.
 
-In message driven systems, a message is usually sent to a single address. These are usually named **commands**. Message that are sent to multiple addresses are said to be :doc:`**published** <publishing>` and they are usually called **events**.
+In message driven systems, a message is usually sent to a single address. These are usually named **commands**. Message that are sent to multiple addresses are said to be :doc:`**published** <pub_sub>` and they are usually called **events**.
 
 While Mersal doesn't enforce any naming standard for messages, it does enforce the idea of `send` vs `publish`. Lets see how to send to an address.
 

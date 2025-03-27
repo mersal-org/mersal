@@ -20,7 +20,10 @@ __all__ = (
 
 @dataclass
 class AutosubscribeConfig:
+    """Configure the autosubscribe plugin."""
+
     events: set[Any] = field(default_factory=set)
+    "A set of message types to subscribe to."
 
     @property
     def plugin(self) -> AutosubscribePlugin:
@@ -28,6 +31,8 @@ class AutosubscribeConfig:
 
 
 class AutosubscribePlugin(Plugin):
+    """Autosubscribe to a given event types once the app is started."""
+
     def __init__(self, config: AutosubscribeConfig) -> None:
         self._events = config.events
 

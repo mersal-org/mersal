@@ -21,6 +21,8 @@ class InMemorySubscriptionStore(defaultdict[str, MutableSet[str]]):
 
 
 class InMemorySubscriptionStorage(SubscriptionStorage):
+    """In memory implementation for storing topics subscriptions."""
+
     __slots__ = ["_is_centralized", "_subscribers"]
 
     def __init__(self) -> None:

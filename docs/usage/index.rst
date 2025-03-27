@@ -8,8 +8,7 @@ Usage
    handlers
    sending
    receiving
-   publishing
-   subscribing
+   pub_sub
    routing
    error_handling
    message_context
@@ -21,4 +20,5 @@ Usage
    transactions
    pipeline
    workers
+   plugins
    contrib/index
