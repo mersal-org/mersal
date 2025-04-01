@@ -3,10 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from mersal.lifespan.lifespan_hooks_registration_plugin import LifespanHooksRegistrationPluginConfig
 from mersal.plugins import Plugin
 from mersal.serialization import Serializer
 from mersal.serialization.identity_serializer import IdentitySerializer
 from mersal.transport.transport import Transport
+from mersal.utils.sync import AsyncCallable
 
 from .in_memory_transport import InMemoryTransportConfig
 
@@ -47,3 +49,11 @@ class InMemoryTransportPlugin(Plugin):
 
         if self.use_identity_serializer:
             configurator.register(Serializer, register_cool_serializer)
+
+        startup_hooks = [
+            lambda config: AsyncCallable(self._config.transport),
+        ]
+        plugin = LifespanHooksRegistrationPluginConfig(
+            on_startup_hooks=startup_hooks,  # type: ignore[arg-type]
+        ).plugin
+        plugin(configurator)

@@ -11,7 +11,8 @@ class BaseTransport(Transport):
     def __init__(self, address: str) -> None:
         self.address = address
 
-    def create_queue(self, address: str) -> None: ...
+    async def create_queue(self, address: str) -> None: ...
+    async def __call__(self) -> None: ...
 
     async def send(
         self,

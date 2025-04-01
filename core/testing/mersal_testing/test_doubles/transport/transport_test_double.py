@@ -11,7 +11,7 @@ class TransportTestDouble(BaseTransport):
         self.sent_messages: list[tuple[list[OutgoingMessage], TransactionContext]] = []
         self.received_messages: list[TransportMessage] = []
 
-    def create_queue(self, address: str) -> None:
+    async def create_queue(self, address: str) -> None:
         pass
 
     async def send_outgoing_messages(

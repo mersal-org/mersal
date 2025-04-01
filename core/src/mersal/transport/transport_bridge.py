@@ -25,8 +25,8 @@ class TransportBridge(Transport):
         self._address_transport_mapping = address_transport_mapping
         self.address = self._transport.address
 
-    def create_queue(self, address: str) -> None:
-        self._transport.create_queue(address)
+    async def create_queue(self, address: str) -> None:
+        await self._transport.create_queue(address)
 
     async def send(
         self,

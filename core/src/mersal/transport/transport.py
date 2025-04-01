@@ -9,7 +9,8 @@ __all__ = ("Transport",)
 class Transport(Protocol):
     address: str
 
-    def create_queue(self, address: str) -> None: ...
+    async def create_queue(self, address: str) -> None: ...
+    async def __call__(self) -> None: ...
 
     async def send(
         self,

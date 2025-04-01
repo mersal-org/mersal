@@ -33,10 +33,12 @@ class InMemoryTransport(BaseTransport):
         super().__init__(address=config.input_queue_address)
         self._network = config.network
         self._input_queue_address = config.input_queue_address
-        self.create_queue(config.input_queue_address)
 
-    def create_queue(self, address: str) -> None:
+    async def create_queue(self, address: str) -> None:
         self._network.create_queue(address)
+
+    async def __call__(self) -> None:
+        await self.create_queue(self._input_queue_address)
 
     async def receive(self, transaction_context: TransactionContext) -> TransportMessage | None:
         next_message = self._network.get_next(self._input_queue_address)

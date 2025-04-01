@@ -18,7 +18,7 @@ class TransportTestDouble(Transport):
         self.address = address
         self.sent_messages = []
 
-    def create_queue(self, address: str):
+    async def create_queue(self, address: str):
         pass
 
     async def send(

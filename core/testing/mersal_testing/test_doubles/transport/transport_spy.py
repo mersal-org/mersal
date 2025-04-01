@@ -11,7 +11,7 @@ class TransportSpy(BaseTransport, Transport):
         self.sent_messages: list[TransportMessage] = []
         self.received_messages: list[TransportMessage] = []
 
-    def create_queue(self, address: str) -> None:
+    async def create_queue(self, address: str) -> None:
         pass
 
     async def send(

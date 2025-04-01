@@ -22,8 +22,8 @@ class OutboxTransportDecorator:
         self.outbox_storage = outbox_storage
         self._outgoing_messages_key = "outgoing-messages"
 
-    def create_queue(self, address: str) -> None:
-        self.transport.create_queue(address)
+    async def create_queue(self, address: str) -> None:
+        await self.transport.create_queue(address)
 
     async def send(
         self,
