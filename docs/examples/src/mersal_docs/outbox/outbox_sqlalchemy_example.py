@@ -1,6 +1,10 @@
 from dataclasses import dataclass, field
 from typing import Any, cast
 
+from mersal_alchemy.sqlalchemy_outbox_storage import (
+    SQLAlchemyOutboxStorageConfig,
+)
+from mersal_msgspec import MsgspecSerializer
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -12,10 +16,6 @@ from mersal.transport.in_memory import (
     InMemoryNetwork,
     InMemoryTransportConfig,
 )
-from mersal_alchemy.sqlalchemy_outbox_storage import (
-    SQLAlchemyOutboxStorageConfig,
-)
-from mersal_msgspec import MsgspecSerializer
 
 __all__ = (
     "AddUser",
