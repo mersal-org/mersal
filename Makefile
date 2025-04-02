@@ -117,43 +117,9 @@ clean:                                              ## Cleanup temporary build a
 
 .PHONY: test
 test:                                               ## Run the tests
-	@echo "${INFO} Running core test cases... 🧪"
-	@uv run pytest core/tests
-	@echo "${OK} Core Tests complete ✨"
-
-.PHONY: test-litestar
-test-litestar:            			              	## Run the mersal_litestar tests
-	@echo "${INFO} Running mersal_litestar test cases... 🧪"
-	@uv run --package=mersal_litestar pytest  packages/mersal_litestar/tests
-	@echo "${OK} Mersal_Litestar Tests complete ✨"
-
-.PHONY: test-polling
-test-polling:            			              	## Run the mersal_polling tests
-	@echo "${INFO} Running mersal_polling test cases... 🧪"
-	@uv run --package=mersal_polling pytest packages/mersal_polling/tests
-	@echo "${OK} Mersal_Polling Tests complete ✨"
-
-.PHONY: test-sqlalchemy
-test-sqlalchemy:            			              	## Run the mersal_alchemy tests
-	@echo "${INFO} Running mersal_alchemy test cases... 🧪"
-	@uv run --package=mersal_alchemy pytest packages/mersal_alchemy/tests
-	@echo "${OK} Mersal_Alchemy Tests complete ✨"
-
-.PHONY: test-msgspec
-test-msgspec:            			              	## Run the mersal_msgspec tests
-	@echo "${INFO} Running mersal_msgspec test cases... 🧪"
-	@uv run --package=mersal_msgspec pytest packages/mersal_msgspec/tests
-	@echo "${OK} Mersal_Msgspec Tests complete ✨"
-
-.PHONY: test-examples
-test-examples:            			              	## Run the doc examples tests
-	@echo "${INFO} Running doc examples test cases... 🧪"
-	@uv run --package=mersal_docs pytest docs/examples/tests
-	@echo "${OK} Doc Examples Tests complete ✨"
-
-.PHONY: test-all
-test-all: test test-litestar test-polling test-sqlalchemy test-msgspec # test-examples ## Run all tests
-	@echo "${INFO} All tests executed successfully ✨"
+	@echo "${INFO} Running test cases... 🧪"
+	@uv run pytest tests
+	@echo "${OK} Tests complete ✨"
 
 # .PHONY: coverage
 # coverage:                                           ## Run tests with coverage report
@@ -214,7 +180,7 @@ lint: fix pre-commit type-check # slotscheck             ## Run all linting chec
 	@echo "${OK} All linting checks passed ✨"
 
 .PHONY: check-all
-check-all: lint test-all # coverage                  ## Run all checks (lint, test, coverage)
+check-all: lint test # coverage                  ## Run all checks (lint, test, coverage)
 	@echo "${OK} All checks passed successfully ✨"
 # =============================================================================
 # Documentation

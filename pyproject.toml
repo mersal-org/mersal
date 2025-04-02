@@ -47,16 +47,6 @@ test = [
 [tool.uv]
 managed = true
 
-[tool.uv.workspace]
-members = ["packages/*", "docs/examples"]
-
-[tool.uv.sources]
-mersal = { workspace = true }
-mersal_polling = { workspace = true }
-mersal_alchemy = { workspace = true }
-mersal_litestar = { workspace = true }
-mersal_msgspec = { workspace = true }
-
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib"
 filterwarnings = [
@@ -66,8 +56,9 @@ log_cli = true
 
 [tool.ruff]
 include = [
-  "core/**/*.{py,pyi}",
-  "packages/**/*.{py,pyi}",
+  "mersal/**/*.{py,pyi}",
+  "testing/**/*.{py,pyi}",
+  "tests/**/*.{py,pyi}",
   "docs/examples/**/*.{py,pyi}",
   "pyproject.toml"
 ]
@@ -131,9 +122,9 @@ lint.ignore = [
   "CPY001",  # ruff - copyright notice at the top of the file
 ]
 src = [
-  "core/src",
-  "core/testing",
-  "packages/*",
+  "mersal",
+  "testing",
+  "tests",
 ]
 
 [tool.ruff.format]
@@ -147,13 +138,13 @@ convention = "google"
 "**/testing/**/*.py" = [
   "S101", # flake8-bandit - use of assert detected
 ]
-"core/src/mersal/threading/__init__.py" = [
+"mersal/threading/__init__.py" = [
   "A005", # lake8-builtins - stdlib-module-shadowing
 ]
-"core/src/mersal/types/__init__.py" = [
+"mersal/types/__init__.py" = [
   "A005", # lake8-builtins - stdlib-module-shadowing
 ]
-"core/tests/profile.py" = [
+"tests/profile.py" = [
   "A005", # lake8-builtins - stdlib-module-shadowing
 ]
 "**/tests/**/*.py" = [
@@ -170,10 +161,6 @@ convention = "google"
 known-first-party = [
 "mersal",
 "mersal_testing",
-"mersal_polling",
-"mersal_alchemy",
-"mersal_msgspec",
-"mersal_litestar",
 ]
 
 [build-system]
@@ -181,7 +168,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["core/src/mersal", "core/testing/mersal_testing"]
+packages = ["mersal", "testing/mersal_testing"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -204,10 +191,6 @@ enable_error_code = [
 packages = [
   "mersal",
   "mersal_testing",
-  "mersal_polling",
-  "mersal_litestar",
-  "mersal_alchemy",
-  "mersal_msgspec",
 ]
 disallow_any_generics = false
 local_partial_types = true
@@ -230,6 +213,7 @@ warn_unused_ignores = false
 typeCheckingMode = "standard"
 pythonVersion = "3.10"
 include = [
-  "core",
-  "packages/*",
+  "mersal",
+  "testing",
+  "tests",
 ]
