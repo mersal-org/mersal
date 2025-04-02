@@ -17,6 +17,9 @@ class TransportDecoratorHelper(Transport):
     async def create_queue(self, address: str) -> None:
         await self.transport.create_queue(address)
 
+    async def __call__(self) -> None:
+        await self.create_queue(self.address)
+
     def append_before_receive_hook(self, hook: Callable[[TransactionContext], None]) -> None:
         self._before_receive_hooks.append(hook)
 

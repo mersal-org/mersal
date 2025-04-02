@@ -21,6 +21,8 @@ class TransportTestDouble(Transport):
     async def create_queue(self, address: str):
         pass
 
+    async def __call__(self) -> None: ...
+
     async def send(
         self,
         destination_address: str,
