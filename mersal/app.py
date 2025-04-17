@@ -214,6 +214,7 @@ class Mersal:
         self.configurator.resolve()
         self.router = self.configurator.get(Router)  # type: ignore[type-abstract]
         self.logger = logging.getLogger("mersal")
+        self.logger.addHandler(logging.NullHandler())
         self.transport = self.configurator.get(Transport)  # type: ignore[type-abstract]
         self.worker_factory = self.configurator.get(WorkerFactory)  # type: ignore[type-abstract]
         self.worker_factory.app = self

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, Any
 
 from .transaction_context import TransactionContext
@@ -18,7 +17,6 @@ __all__ = (
 
 class DefaultTransactionContext(TransactionContext):
     def __init__(self) -> None:
-        self.logger = logging.getLogger("mersal.defaultTransactionContext")
         self.items: dict[str | type, Any] = {}
         self._on_committed_actions: list[AsyncTransactionContextCallable] = []
         self._on_rollback_actions: list[AsyncTransactionContextCallable] = []
