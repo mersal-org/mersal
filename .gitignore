@@ -197,3 +197,4 @@ cython_debug/
 # End of https://www.toptal.com/developers/gitignore/api/python,emacs
 #
 .projectile-cache.eld
+DOCUMENTATION_STRATEGY.md
