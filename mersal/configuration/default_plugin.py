@@ -55,8 +55,9 @@ __all__ = ("DefaultPlugin",)
 
 
 class DefaultPlugin(Plugin):
-    def __init__(self, pdb_on_exception: bool) -> None:
+    def __init__(self, pdb_on_exception: bool, max_parallelism: int) -> None:
         self.pdb_on_exception = pdb_on_exception
+        self.max_parallelism = max_parallelism
 
     def __call__(self, configurator: StandardConfigurator) -> None:
         self.configurator = configurator

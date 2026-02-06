@@ -1,8 +1,13 @@
+import json
+import uuid
+
 import pytest
-from anyio import create_task_group, sleep
+from anyio import sleep
 
 from mersal.activation import BuiltinHandlerActivator
 from mersal.app import Mersal
+from mersal.messages.message_headers import MessageHeaders
+from mersal.messages.transport_message import TransportMessage
 from mersal.pipeline import RecursivePipelineInvoker
 from mersal.pipeline.default_pipeline import (
     DefaultIncomingPipeline,
@@ -55,6 +60,30 @@ class HappyStep(IncomingStep):
         transaction_context.set_result(True, True)
 
 
+class VariableSpeedStep(IncomingStep):
+    def __init__(self, results: list[str]) -> None:
+        self.results = results
+
+    async def __call__(self, context: IncomingStepContext, next_step: AsyncAnyCallable):
+        transaction_context: TransactionContext = context.load(TransactionContext)
+        transaction_context.set_result(True, True)
+        message = context.load(TransportMessage)
+        delay = float(message.headers["delay"])
+        label = str(message.headers["label"])
+        await sleep(delay)
+        self.results.append(label)
+
+
+def _build_message_with_headers(**extra_headers: object) -> TransportMessage:
+    data = {"a": 10}
+    json_data = json.dumps(data)
+    _bytes = bytes(json_data, "utf-8")
+    headers = MessageHeaders(message_id=uuid.uuid4())
+    for key, value in extra_headers.items():
+        headers[key] = value
+    return TransportMessage(body=_bytes, headers=headers)
+
+
 class TestAnyioWorker:
     @pytest.fixture
     def incoming_pipeline(self) -> DefaultIncomingPipeline:
@@ -69,7 +98,7 @@ class TestAnyioWorker:
         network = InMemoryNetwork()
         queue_address = "test-queue"
         transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
-        factory = AnyioWorkerFactory(transport, pipeline_invoker)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=1)
         worker_name = "Worker-1"
         subject = factory.create_worker(worker_name)
 
@@ -78,10 +107,8 @@ class TestAnyioWorker:
 
         subject._receive_message = throw
 
-        async with create_task_group() as tg:
-            tg.start_soon(subject.start)
+        async with subject:
             await sleep(0)
-            tg.cancel_scope.cancel()
 
         assert f"Unhandled exception in worker: {worker_name} while trying to receive the message." in caplog.text
 
@@ -91,7 +118,7 @@ class TestAnyioWorker:
         network = InMemoryNetwork()
         queue_address = "test-queue"
         transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
-        factory = AnyioWorkerFactory(transport, pipeline_invoker)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=1)
         worker_name = "Worker-1"
         subject = factory.create_worker(worker_name)
 
@@ -100,10 +127,8 @@ class TestAnyioWorker:
 
         transport.receive = transport_throw  # pyright: ignore[reportAttributeAccessIssue]
 
-        async with create_task_group() as tg:
-            tg.start_soon(subject.start)
+        async with subject:
             await sleep(0)
-            tg.cancel_scope.cancel()
 
         assert (
             f"Unhandled exception in worker: {worker_name} while trying to receive next message from transport"
@@ -128,14 +153,12 @@ class TestAnyioWorker:
             transaction_context.on_close(on_close)
 
         transport.append_before_receive_hook(hook)
-        factory = AnyioWorkerFactory(transport, pipeline_invoker=pipeline_invoker)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker=pipeline_invoker, max_parallelism=1)
         worker_name = "Worker-1"
         subject = factory.create_worker(worker_name)
 
-        async with create_task_group() as tg:
-            tg.start_soon(subject.start)
+        async with subject:
             await sleep(0)
-            tg.cancel_scope.cancel()
 
         assert called
 
@@ -158,10 +181,8 @@ class TestAnyioWorker:
 
         subject: AnyioWorker = app.worker  # type: ignore
 
-        async with create_task_group() as tg:
-            tg.start_soon(subject.start)
+        async with subject:
             await sleep(0)
-            tg.cancel_scope.cancel()
 
         assert transport_decorator
         assert isinstance(transport_decorator._receive[0], DefaultTransactionContextWithOwningApp)
@@ -177,15 +198,13 @@ class TestAnyioWorker:
         queue_address = "test-queue"
         transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
         incoming_pipeline.append_step(ThrowingStep())
-        factory = AnyioWorkerFactory(transport, pipeline_invoker)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=1)
         worker_name = "Worker-1"
         subject = factory.create_worker(worker_name)
 
         network.deliver(queue_address, TransportMessageBuilder.build())
-        async with create_task_group() as tg:
-            tg.start_soon(subject.start)
+        async with subject:
             await sleep(0)
-            tg.cancel_scope.cancel()
 
         assert "Unhandled exception while handling message" in caplog.text
 
@@ -195,15 +214,13 @@ class TestAnyioWorker:
         network = InMemoryNetwork()
         queue_address = "test-queue"
         transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
-        factory = AnyioWorkerFactory(transport, pipeline_invoker)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=1)
         worker_name = "Worker-1"
         subject = factory.create_worker(worker_name)
 
         network.deliver(queue_address, TransportMessageBuilder.build())
-        async with create_task_group() as tg:
-            tg.start_soon(subject.start)
+        async with subject:
             await sleep(0)
-            tg.cancel_scope.cancel()
 
         assert "Exception while trying to complete the transaction context for message" in caplog.text
 
@@ -217,14 +234,87 @@ class TestAnyioWorker:
         queue_address = "test-queue"
         transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
         incoming_pipeline.append(HappyStep())
-        factory = AnyioWorkerFactory(transport, pipeline_invoker)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=1)
         worker_name = "Worker-1"
         subject = factory.create_worker(worker_name)
 
         network.deliver(queue_address, TransportMessageBuilder.build())
-        async with create_task_group() as tg:
-            tg.start_soon(subject.start)
+        async with subject:
             await sleep(0)
-            tg.cancel_scope.cancel()
 
         assert not network.get_next(queue_address)
+
+    async def test_processes_messages_concurrently(
+        self,
+        pipeline_invoker: RecursivePipelineInvoker,
+        incoming_pipeline: DefaultIncomingPipeline,
+    ):
+        results: list[str] = []
+        network = InMemoryNetwork()
+        queue_address = "test-queue"
+        transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
+        incoming_pipeline.append(VariableSpeedStep(results))
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=5)
+        subject = factory.create_worker("Worker-1")
+
+        network.deliver(queue_address, _build_message_with_headers(delay=0.3, label="slow"))
+        network.deliver(queue_address, _build_message_with_headers(delay=0.05, label="fast"))
+
+        async with subject:
+            await sleep(0.5)
+
+        assert results == ["fast", "slow"]
+
+    async def test_backpressure_limits_concurrent_processing(
+        self,
+        pipeline_invoker: RecursivePipelineInvoker,
+        incoming_pipeline: DefaultIncomingPipeline,
+    ):
+        results: list[str] = []
+        network = InMemoryNetwork()
+        queue_address = "test-queue"
+        transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
+        incoming_pipeline.append(VariableSpeedStep(results))
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=1)
+        subject = factory.create_worker("Worker-1")
+
+        network.deliver(queue_address, _build_message_with_headers(delay=0.3, label="slow"))
+        network.deliver(queue_address, _build_message_with_headers(delay=0.05, label="fast"))
+
+        async with subject:
+            await sleep(0.5)
+
+        assert results == ["slow", "fast"]
+
+    async def test_transaction_context_closed_for_each_concurrent_message(
+        self,
+        pipeline_invoker: RecursivePipelineInvoker,
+        incoming_pipeline: DefaultIncomingPipeline,
+    ):
+        network = InMemoryNetwork()
+        queue_address = "test-queue"
+        _transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
+        transport = TransportDecoratorHelper(_transport)
+
+        close_calls: list[TransactionContext] = []
+
+        async def on_close(transaction_context: TransactionContext):
+            close_calls.append(transaction_context)
+
+        def hook(transaction_context: TransactionContext):
+            transaction_context.on_close(on_close)
+
+        transport.append_before_receive_hook(hook)
+        incoming_pipeline.append(HappyStep())
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=5)
+        subject = factory.create_worker("Worker-1")
+
+        network.deliver(queue_address, TransportMessageBuilder.build())
+        network.deliver(queue_address, TransportMessageBuilder.build())
+
+        async with subject:
+            await sleep(0.1)
+
+        # close() should have been called for each message's transaction context
+        # plus the empty-receive iterations that also close their contexts
+        assert len(close_calls) >= 2

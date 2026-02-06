@@ -94,6 +94,7 @@ class Mersal:
         outbox: OutboxConfig | None = None,
         pdb_on_exception: bool | None = None,
         message_id_generator: MessageIdGenerator | None = None,
+        max_parallelism: int = 1,
     ):
         """Initializes the Mersal app.
 
@@ -203,7 +204,7 @@ class Mersal:
 
         self.handler_activator.app = self
         self.configurator.mersal = self
-        plugins.append(DefaultPlugin(pdb_on_exception=bool(pdb_on_exception)))
+        plugins.append(DefaultPlugin(pdb_on_exception=bool(pdb_on_exception), max_parallelism=max_parallelism))
         for plugin in plugins:
             plugin(self.configurator)
 

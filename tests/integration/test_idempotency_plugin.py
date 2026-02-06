@@ -1,3 +1,5 @@
+import uuid
+
 import anyio
 import pytest
 from anyio import sleep
@@ -57,10 +59,11 @@ class TestIdempotencyPlugin:
         ]
         app = Mersal("m1", activator, plugins=plugins)
 
-        await app.send_local(message)
-        await app.send_local(message)
+        message_id = uuid.uuid4()
+        await app.send_local(message, headers={"message_id": message_id})
+        await app.send_local(message, headers={"message_id": message_id})
         await app.start()
-        await anyio.sleep(0)
+        await anyio.sleep(1)
         assert handler.call_count == 1
 
     async def test_continues_invocation(self):

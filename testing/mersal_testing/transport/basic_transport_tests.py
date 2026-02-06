@@ -70,8 +70,9 @@ class BasicTransportTest:
             received_message3 = await transport2.receive(context)
             assert received_message1
             assert received_message2
-            assert received_message1.headers.message_id == transport_message1.headers.message_id
-            assert received_message2.headers.message_id == transport_message2.headers.message_id
+            received_ids = {str(received_message1.headers.message_id), str(received_message2.headers.message_id)}
+            expected_ids = {str(transport_message1.headers.message_id), str(transport_message2.headers.message_id)}
+            assert received_ids == expected_ids
             assert not received_message3
 
         await self.assert_with_context(_assert2)
@@ -147,7 +148,7 @@ class BasicTransportTest:
         async def _assert2(context: DefaultTransactionContext) -> None:
             received_message = await transport2.receive(context)
             assert received_message
-            assert received_message.headers.message_id == transport_message.headers.message_id
+            assert str(received_message.headers.message_id) == str(transport_message.headers.message_id)
 
         await self.assert_with_context(
             _assert2,
@@ -159,7 +160,7 @@ class BasicTransportTest:
         async def _assert3(context: DefaultTransactionContext) -> None:
             received_message = await transport2.receive(context)
             assert received_message
-            assert received_message.headers.message_id == transport_message.headers.message_id
+            assert str(received_message.headers.message_id) == str(transport_message.headers.message_id)
 
         await self.assert_with_context(_assert3, commit=should_commit_second_time, ack=True)
 

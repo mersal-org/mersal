@@ -93,7 +93,7 @@ class TestIdempotencyCheckerStep:
         await transaction_context.complete()
         await transaction_context.close()
 
-        assert not await tracker.is_message_tracked(message_id, transaction_context)
+        assert await tracker.is_message_tracked(message_id, transaction_context)
 
     @pytest.mark.parametrize("subject", [True, False], indirect=True)
     async def test_tracking_message_with_commit(

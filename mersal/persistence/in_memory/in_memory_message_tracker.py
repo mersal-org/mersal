@@ -13,6 +13,8 @@ class InMemoryMessageTracker(MessageTracker):
         self._tracked_messages: set[uuid.UUID] = set()
 
     async def track_message(self, message_id: uuid.UUID, transaction_context: TransactionContext) -> None:
+        if message_id in self._tracked_messages:
+            raise Exception("Message already tracked")
         self._tracked_messages.add(message_id)
 
     async def is_message_tracked(self, message_id: uuid.UUID, transaction_context: TransactionContext) -> bool:

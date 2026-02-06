@@ -29,6 +29,7 @@ class AnyioWorker:
         transport: Transport,
         app: Mersal,
         pipeline_invoker: PipelineInvoker,
+        max_parallelism: int,
     ) -> None:
         self.logger = logging.getLogger("mersal.defaultWorker")
         self.name = name
@@ -38,6 +39,9 @@ class AnyioWorker:
         self._exit_stack: AsyncExitStack | None = None
         self._cancel_scope: CancelScope | None = None
         self._running = False
+        self._max_parallelism = max_parallelism
+        self._parallelism_limiter: anyio.Semaphore | None = None
+        self._processing_tg: anyio.TaskGroup | None = None
 
     async def _stop(self) -> None:
         self.logger.info("The worker %r will stop now.", self.name)
@@ -50,10 +54,11 @@ class AnyioWorker:
     async def __aenter__(self) -> AnyioWorker:
         self.logger.info("The worker %r will start now.", self.name)
         self._exit_stack = AsyncExitStack()
-        task_group = anyio.create_task_group()
-        await self._exit_stack.enter_async_context(task_group)
-        self._cancel_scope = task_group.cancel_scope
-        task_group.start_soon(self.start)
+        self._parallelism_limiter = anyio.Semaphore(self._max_parallelism)
+        self._processing_tg = anyio.create_task_group()
+        await self._exit_stack.enter_async_context(self._processing_tg)
+        self._cancel_scope = self._processing_tg.cancel_scope
+        self._processing_tg.start_soon(self._run)
         return self
 
     async def __aexit__(
@@ -65,7 +70,7 @@ class AnyioWorker:
         await self._stop()
         self._exit_stack = None
 
-    async def start(self) -> None:
+    async def _run(self) -> None:
         try:
             self._running = True
             await self._start()
@@ -85,19 +90,39 @@ class AnyioWorker:
             await sleep(0)
 
     async def _receive_message(self) -> None:
-        async with DefaultTransactionContextWithOwningApp(self.app) as transaction_context:
-            transport_message: TransportMessage | None = None
-            try:
-                transport_message = await self.transport.receive(transaction_context)
-            except Exception:
-                self.logger.exception(
-                    "Unhandled exception in worker: %s while trying to receive next message from transport",
-                    self.name,
-                )
+        await self._parallelism_limiter.acquire()
+        transaction_context = DefaultTransactionContextWithOwningApp(self.app)
+        await transaction_context.__aenter__()
+        transport_message: TransportMessage | None = None
+        try:
+            transport_message = await self.transport.receive(transaction_context)
+        except Exception:
+            self.logger.exception(
+                "Unhandled exception in worker: %s while trying to receive next message from transport",
+                self.name,
+            )
 
-            if transport_message:
-                with CancelScope(shield=True):
-                    await self._process_message(transport_message, transaction_context)
+        if transport_message:
+            self._processing_tg.start_soon(self._process_message_in_background, transport_message, transaction_context)
+        else:
+            await transaction_context.__aexit__(None, None, None)
+            self._parallelism_limiter.release()
+
+    async def _process_message_in_background(
+        self, message: TransportMessage, transaction_context: TransactionContext
+    ) -> None:
+        with CancelScope(shield=True):
+            try:
+                await self._process_message(message, transaction_context)
+            finally:
+                try:
+                    await transaction_context.__aexit__(None, None, None)
+                except Exception:
+                    self.logger.exception(
+                        "Exception while trying to close transaction context for message %r",
+                        message.message_label,
+                    )
+                self._parallelism_limiter.release()
 
     async def _process_message(self, message: TransportMessage, transaction_context: TransactionContext) -> None:
         try:

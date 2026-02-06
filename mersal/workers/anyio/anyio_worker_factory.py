@@ -17,9 +17,11 @@ class AnyioWorkerFactory:
         self,
         transport: Transport,
         pipeline_invoker: PipelineInvoker,
+        max_parallelism: int = 1,
     ) -> None:
         self.transport = transport
         self.pipeline_invoker = pipeline_invoker
+        self.max_parallelism = max_parallelism
         self.app: Mersal = None  # type: ignore[assignment]
 
     def create_worker(
@@ -31,4 +33,5 @@ class AnyioWorkerFactory:
             transport=self.transport,
             app=self.app,
             pipeline_invoker=self.pipeline_invoker,
+            max_parallelism=self.max_parallelism,
         )

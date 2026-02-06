@@ -5,7 +5,7 @@ from mersal.pipeline import IncomingStepContext
 from mersal.pipeline.incoming_step import IncomingStep
 from mersal.pipeline.receive.handler_invokers import HandlerInvokers
 from mersal.transport import TransactionContext
-from mersal.types.callable_types import AsyncAnyCallable, AsyncTransactionContextCallable
+from mersal.types.callable_types import AsyncAnyCallable
 
 __all__ = ("IdempotencyCheckerStep",)
 
@@ -20,19 +20,26 @@ class IdempotencyCheckerStep(IncomingStep):
         message = context.load(LogicalMessage)
         message_id = message.headers.message_id
 
+        invokers = context.load(HandlerInvokers)
         if await self.message_tracker.is_message_tracked(message_id, transaction_context):
-            invokers = context.load(HandlerInvokers)
-            if self.stop_invocation:
-                for invoker in invokers:
-                    invoker.should_invoke = False
-            else:
-                message.headers[IDEMPOTENCY_CHECK_KEY] = True
-        else:
-            message.headers[IDEMPOTENCY_CHECK_KEY] = False
+            self._handle_duplicate(message, invokers)
+            await next_step()
+            return
 
-            async def action(_: AsyncTransactionContextCallable) -> None:
-                await self.message_tracker.track_message(message_id, transaction_context)
+        try:
+            await self.message_tracker.track_message(message_id, transaction_context)
+        except Exception:
+            self._handle_duplicate(message, invokers)
+            await next_step()
+            return
 
-            transaction_context.on_commit(action)
+        message.headers[IDEMPOTENCY_CHECK_KEY] = False
 
         await next_step()
+
+    def _handle_duplicate(self, message, invokers):
+        if self.stop_invocation:
+            for invoker in invokers:
+                invoker.should_invoke = False
+        else:
+            message.headers[IDEMPOTENCY_CHECK_KEY] = True
