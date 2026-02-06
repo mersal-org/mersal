@@ -29,7 +29,7 @@ docs = [
     'mersal',
     'sqlalchemy',
     'mersal_msgspec',
-    'mersal_alchemy',
+    'mersal_sqlalchemy',
     'mersal_polling',
     'mersal_litestar',
 ]
