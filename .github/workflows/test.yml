@@ -28,7 +28,7 @@ jobs:
         shell: bash
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Free additional space
         run: |
@@ -45,27 +45,33 @@ jobs:
           && sudo apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ inputs..python-version }}
 
-      - name: Set up Python
-        run: uv python install ${{ inputs.python-version }}
+      - name: Install mise
+        uses: jdx/mise-action@v2
+        with:
+          install: false
+          cache: true
+          experimental: true
 
       - name: Install dependencies
-        run: uv sync --all-extras --dev --all-packages
+        run: mise run install
 
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
 
       - name: Test
         if: ${{ !inputs.coverage }}
-        run: uv run make test
+        run: mise run test
 
-      # - name: Test with coverage
-      #   if: ${{ inputs.coverage }}
-      #   run: uv run pytest tests
+      - name: Test with coverage
+        if: ${{ inputs.coverage }}
+        run: mise run test-with-coverage
 
-      # - uses: actions/upload-artifact@v4
-      #   if: ${{ inputs.coverage }}
-      #   with:
-      #     name: coverage-xml
-      #     path: coverage.xml
+      - uses: actions/upload-artifact@v6
+        if: ${{ inputs.coverage }}
+        with:
+          name: coverage-xml
+          path: coverage.xml

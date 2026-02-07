@@ -10,21 +10,31 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+    environment: release
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+        with:
+          install: false
+          cache: true
+          experimental: true
 
       - name: Set up Python and create virtual environment
-        run: make install
-
-      - name: Install dependencies
-        run: make install
+        run: mise run install
 
       - name: Build package
-        run: make build
+        run: mise run build
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

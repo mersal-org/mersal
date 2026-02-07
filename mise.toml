@@ -1,0 +1,293 @@
+[settings]
+experimental = true
+python.uv_venv_auto = true
+
+[vars]
+BLUE   = "\u001b[1;34m"
+GREEN  = "\u001b[1;32m"
+RED    = "\u001b[1;31m"
+YELLOW = "\u001b[1;33m"
+NC     = "\u001b[0m" # No Color
+
+INFO  = "{{vars.BLUE}}ℹ{{vars.NC}}"
+OK    = "{{vars.GREEN}}✓{{vars.NC}}"
+WARN  = "{{vars.YELLOW}}⚠{{vars.NC}}"
+ERROR = "{{vars.RED}}✖{{vars.NC}}"
+
+[tasks.install-uv]
+description = "Install uv"
+run = '''
+echo "{{vars.INFO}} Installing uv..."
+curl -LsSf https://astral.sh/uv/install.sh | sh >/dev/null 2>&1 && \
+echo "{{vars.OK}} uv installed successfully" || \
+(echo "{{vars.ERROR}} Failed to install uv" && exit 1)
+'''
+quiet = true
+hide = true
+
+[tasks.destroy]
+description = "Destroy dev setup"
+run = '''
+echo "{{vars.INFO}} Destroying virtual environment... 🗑️"
+uv run pre-commit clean >/dev/null 2>&1
+rm -rf .venv
+echo "{{vars.OK}} Virtual environment destroyed 🗑️"
+'''
+quiet = true
+hide = true
+
+[tasks.clean]
+description = "Clean working env"
+run = '''
+echo "{{vars.INFO}} Cleaning working directory... 🧹"
+rm -rf .pytest_cache .ruff_cache .hypothesis build/ -rf dist/ .eggs/ .coverage coverage.xml coverage.json htmlcov/ .pytest_cache tests/.pytest_cache tests/**/.pytest_cache .mypy_cache .unasyncd_cache/ .auto_pytabs_cache >/dev/null 2>&1
+find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1
+find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1
+find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1
+find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1
+find . -name '*~' -exec rm -f {} + >/dev/null 2>&1
+find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1
+find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1
+echo "{{vars.OK}} Working directory cleaned"
+'''
+quiet = true
+
+[tasks."docs:clean"]
+description = "Clean docs build"
+run = '''
+echo "{{vars.INFO}} Cleaning documentation build assets... 🧹"
+rm -rf docs/_build >/dev/null 2>&1
+echo "{{vars.OK}} Documentation assets cleaned"
+'''
+quiet = true
+
+[tasks._pre-install]
+description = "Pre-install steps"
+run = [
+    "{{mise_bin}} run destroy",
+    "{{mise_bin}} run clean",
+]
+hide = true
+quiet = true
+
+[tasks.install]
+description = "Install everything fresh"
+depends = ["_pre-install"]
+run = [
+'''
+echo "{{vars.INFO}} Starting fresh installation..."
+uv python pin 3.13 >/dev/null 2>&1
+uv venv >/dev/null 2>&1
+uv sync --all-extras --dev --all-packages
+uv run pre-commit install
+echo "{{vars.OK}} Installation complete! 🎉"
+'''
+]
+quiet = true
+
+[tasks.upgrade]
+quiet = true
+description = "Upgrade deps"
+run = [
+'''
+echo "{{vars.INFO}} Updating all dependencies... 🔄"
+uv lock --upgrade
+echo "{{vars.OK}} Dependencies updated 🔄"
+uv run pre-commit autoupdate
+echo "{{vars.OK}} Updated Pre-commit hooks 🔄"
+'''
+]
+
+[tasks.lock]
+quiet = true
+description = "Lock deps"
+run = [
+'''
+echo "{{vars.INFO}} Rebuilding lockfiles... 🔄"
+uv lock --upgrade >/dev/null 2>&1
+echo "{{vars.OK}} Lockfiles updated"
+'''
+]
+
+[tasks.build]
+quiet = true
+description = "Build package"
+run = [
+'''
+echo "{{vars.INFO}} Building package... 📦"
+uv build --all-packages >/dev/null 2>&1
+echo "{{vars.OK}} Package build complete"
+'''
+]
+
+[tasks.release]
+quiet = true
+description = "Bump version and release"
+run = [
+'''
+echo "{{vars.INFO}} Preparing for release... 📦"
+{{mise_bin}} run docs
+{{mise_bin}} run clean
+{{mise_bin}} run build
+uv lock --upgrade-package litestar-vite >/dev/null 2>&1
+uv run bump-my-version bump {{vars.bump}}
+echo "{{vars.OK}} Release complete 🎉"
+'''
+]
+
+# =============================================================================
+# Testing and Quality Checks
+# =============================================================================
+
+[tasks.test]
+quiet = true
+description = "Run tests"
+run = [
+'''
+echo "{{vars.INFO}} Running test cases... 🧪"
+uv run pytest tests
+echo "{{vars.OK}} Tests complete ✨"
+'''
+]
+
+[tasks.test-with-coverage]
+quiet = true
+description = "Run tests with coverage"
+run = [
+'''
+echo "{{vars.INFO}} Running test cases... 🧪"
+uv run pytest tests --cov=mersal --cov-report=xml
+echo "{{vars.OK}} Tests complete ✨"
+'''
+]
+
+# -----------------------------------------------------------------------------
+# Type Checking
+# -----------------------------------------------------------------------------
+
+[tasks."type-check:mypy"]
+quiet = true
+description = "Mypy"
+run = [
+'''
+echo "{{vars.INFO}} Running mypy... 🔍"
+uv run dmypy run
+echo "{{vars.OK}} Mypy checks passed ✨"
+'''
+]
+
+[tasks."type-check:pyright"]
+quiet = true
+description = "Pyright"
+run = [
+'''
+echo "{{vars.INFO}} Running basedpyright... 🔍"
+uv run basedpyright
+echo "{{vars.OK}} Basedpyright checks passed ✨"
+'''
+]
+
+[tasks.type-check]
+quiet = true
+description = "Type check"
+run = [
+    "{{mise_bin}} run type-check:mypy",
+    "{{mise_bin}} run type-check:pyright",
+]
+
+# -----------------------------------------------------------------------------
+# Linting and Formatting
+# -----------------------------------------------------------------------------
+
+[tasks."lint:pre-commit"]
+quiet = true
+description = "Pre-commit"
+run = [
+'''
+echo "{{vars.INFO}} Running pre-commit checks... 🔎"
+uv run pre-commit run --show-diff-on-failure --color=always --all-files
+echo "{{vars.OK}} Pre-commit checks passed ✨"
+'''
+]
+
+[tasks."lint:fix"]
+quiet = true
+description = "Code formatters"
+run = [
+'''
+echo "{{vars.INFO}} Running code formatters... 🔧"
+uv run ruff check --fix --unsafe-fixes
+uv run ruff format
+echo "{{vars.OK}} Code formatting complete ✨"
+'''
+]
+
+[tasks.lint]
+quiet = true
+description = "Lint"
+run = [
+    "{{mise_bin}} run lint:fix",
+    "{{mise_bin}} run lint:pre-commit",
+]
+
+# -----------------------------------------------------------------------------
+# Documentation
+# -----------------------------------------------------------------------------
+
+[tasks."docs:serve"]
+quiet = true
+description = "Serve docs locally"
+depends = ["docs:clean"]
+run = [
+'''
+echo "{{vars.INFO}} Starting documentation server... 📚"
+uv run sphinx-autobuild docs docs/_build/ -j auto --watch core --watch packages --watch docs --watch CONTRIBUTING.rst --port 8002
+'''
+]
+
+[tasks.docs]
+quiet = true
+description = "Build docs"
+depends = ["docs:clean"]
+run = [
+'''
+echo "{{vars.INFO}} Building documentation... 📝"
+uv run sphinx-build -M html docs docs/_build/ -E -a -j auto -W --keep-going >/dev/null 2>&1
+echo "{{vars.OK}} Documentation built successfully"
+'''
+]
+
+[tasks."docs:linkcheck"]
+quiet = true
+description = "Check doc links"
+run = [
+'''
+echo "{{vars.INFO}} Checking documentation links... 🔗"
+uv run sphinx-build -b linkcheck ./docs ./docs/_build -D linkcheck_ignore='http://.*','https://.*'
+echo "{{vars.OK}} Link check complete"
+'''
+]
+
+[tasks."docs:linkcheck-full"]
+quiet = true
+description = "Full doc link check"
+run = [
+'''
+echo "{{vars.INFO}} Running full link check... 🔗"
+uv run sphinx-build -b linkcheck ./docs ./docs/_build -D linkcheck_anchors=0
+echo "{{vars.OK}} Full link check complete"
+'''
+]
+
+# -----------------------------------------------------------------------------
+# Overall check
+# -----------------------------------------------------------------------------
+
+[tasks.check-all]
+quiet = true
+description = "Check everything"
+run = [
+    "{{mise_bin}} run lint",
+    "{{mise_bin}} run type-check",
+    "{{mise_bin}} run test",
+]

@@ -17,13 +17,25 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+        with:
+          install: false
+          cache: true
+          experimental: true
 
       - name: Set up Python and create virtual environment
-        run: make install
+        run: mise run install
 
       - name: Build Release Documentation
         run: uv run python tools/build_docs.py docs-build --version latest
@@ -34,7 +46,7 @@ jobs:
         if: github.event_name != 'release'
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: docs-build/
   deploy:

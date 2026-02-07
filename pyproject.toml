@@ -41,6 +41,8 @@ linting = [
 ]
 test = [
     "pytest",
+    "pytest-cov",
+    "pytest-xdist",
     "anyio",
 ]
 
