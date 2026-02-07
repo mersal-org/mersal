@@ -16,6 +16,9 @@ Mersal
        .. image:: https://github.com/mersal-org/mersal/actions/workflows/docs.yml/badge.svg?branch=main
           :target: https://github.com/mersal-org/mersal/actions/workflows/docs.yml
           :alt: Documentation Building
+   * - Quality
+     - .. image:: https://codecov.io/github/mersal-org/mersal/graph/badge.svg?token=3219SZABYN
+          :target: https://codecov.io/github/mersal-org/mersal
    * - Package
      - .. image:: https://img.shields.io/pypi/v/mersal?labelColor=202235&color=1e4b94&logo=python&logoColor=white
           :target: https://badge.fury.io/py/mersal
