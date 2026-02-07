@@ -2,5 +2,5 @@
 outbox
 ======
 
-.. automodule:: mersal_alchemy.sqlalchemy_outbox_storage
+.. automodule:: mersal_sqlalchemy.sqlalchemy_outbox_storage
    :members:

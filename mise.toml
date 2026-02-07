@@ -18,7 +18,7 @@ ERROR = "{{vars.RED}}✖{{vars.NC}}"
 description = "Install uv"
 run = '''
 echo "{{vars.INFO}} Installing uv..."
-curl -LsSf https://astral.sh/uv/install.sh | sh >/dev/null 2>&1 && \
+curl -LsSf https://astral.sh/uv/install.sh | sh && \
 echo "{{vars.OK}} uv installed successfully" || \
 (echo "{{vars.ERROR}} Failed to install uv" && exit 1)
 '''
@@ -29,7 +29,7 @@ hide = true
 description = "Destroy dev setup"
 run = '''
 echo "{{vars.INFO}} Destroying virtual environment... 🗑️"
-uv run pre-commit clean >/dev/null 2>&1
+uv run pre-commit clean
 rm -rf .venv
 echo "{{vars.OK}} Virtual environment destroyed 🗑️"
 '''
@@ -40,14 +40,14 @@ hide = true
 description = "Clean working env"
 run = '''
 echo "{{vars.INFO}} Cleaning working directory... 🧹"
-rm -rf .pytest_cache .ruff_cache .hypothesis build/ -rf dist/ .eggs/ .coverage coverage.xml coverage.json htmlcov/ .pytest_cache tests/.pytest_cache tests/**/.pytest_cache .mypy_cache .unasyncd_cache/ .auto_pytabs_cache >/dev/null 2>&1
-find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1
-find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1
-find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1
-find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1
-find . -name '*~' -exec rm -f {} + >/dev/null 2>&1
-find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1
-find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1
+rm -rf .pytest_cache .ruff_cache .hypothesis build/ -rf dist/ .eggs/ .coverage coverage.xml coverage.json htmlcov/ .pytest_cache tests/.pytest_cache tests/**/.pytest_cache .mypy_cache .unasyncd_cache/ .auto_pytabs_cache
+find . -name '*.egg-info' -exec rm -rf {} +
+find . -type f -name '*.egg' -exec rm -f {} +
+find . -name '*.pyc' -exec rm -f {} +
+find . -name '*.pyo' -exec rm -f {} +
+find . -name '*~' -exec rm -f {} +
+find . -name '__pycache__' -exec rm -rf {} +
+find . -name '.ipynb_checkpoints' -exec rm -rf {} +
 echo "{{vars.OK}} Working directory cleaned"
 '''
 quiet = true
@@ -56,7 +56,7 @@ quiet = true
 description = "Clean docs build"
 run = '''
 echo "{{vars.INFO}} Cleaning documentation build assets... 🧹"
-rm -rf docs/_build >/dev/null 2>&1
+rm -rf docs/_build
 echo "{{vars.OK}} Documentation assets cleaned"
 '''
 quiet = true
@@ -102,7 +102,7 @@ description = "Lock deps"
 run = [
 '''
 echo "{{vars.INFO}} Rebuilding lockfiles... 🔄"
-uv lock --upgrade >/dev/null 2>&1
+uv lock --upgrade
 echo "{{vars.OK}} Lockfiles updated"
 '''
 ]
@@ -113,25 +113,11 @@ description = "Build package"
 run = [
 '''
 echo "{{vars.INFO}} Building package... 📦"
-uv build --all-packages >/dev/null 2>&1
+uv build --all-packages
 echo "{{vars.OK}} Package build complete"
 '''
 ]
 
-[tasks.release]
-quiet = true
-description = "Bump version and release"
-run = [
-'''
-echo "{{vars.INFO}} Preparing for release... 📦"
-{{mise_bin}} run docs
-{{mise_bin}} run clean
-{{mise_bin}} run build
-uv lock --upgrade-package litestar-vite >/dev/null 2>&1
-uv run bump-my-version bump {{vars.bump}}
-echo "{{vars.OK}} Release complete 🎉"
-'''
-]
 
 # =============================================================================
 # Testing and Quality Checks
@@ -244,13 +230,13 @@ uv run sphinx-autobuild docs docs/_build/ -j auto --watch core --watch packages 
 ]
 
 [tasks.docs]
-quiet = true
+quiet = false
 description = "Build docs"
 depends = ["docs:clean"]
 run = [
 '''
 echo "{{vars.INFO}} Building documentation... 📝"
-uv run sphinx-build -M html docs docs/_build/ -E -a -j auto -W --keep-going >/dev/null 2>&1
+uv run sphinx-build -M html docs docs/_build/ -E -a -j auto -W --keep-going
 echo "{{vars.OK}} Documentation built successfully"
 '''
 ]

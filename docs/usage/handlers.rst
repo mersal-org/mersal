@@ -12,7 +12,7 @@ Message handlers in Mersal are simply callables that define the message as the o
 Since handlers can be any callable, we are free to choose function or class based handlers (or do some ninja meta-programming moves that somehow generates a handler. As long is it can be called and accepts the message as an argument then it works!)
 
 Function-based Handlers
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Here is a function based handler that handles a `SubmitOrderCommand` message.
 
@@ -30,7 +30,7 @@ Here is a function based handler that handles a `SubmitOrderCommand` message.
         # Process the order...
 
 Class-based Handlers
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 The same handler can be defined as a class:
 
@@ -50,7 +50,7 @@ The same handler can be defined as a class:
 
 
 Registering Message Handlers
---------------------------
+--------------------------------
 
 So the incoming message pipeline executes the handlers as one of its many steps. How does it know which handlers to invoke? We must tell the Mersal app which handlers are associated with which message types. This is the purpose of :class:`HandlerActivator <.activation.HandlerActivator>`.
 
@@ -109,7 +109,7 @@ The message handler factory doesn't need to be defined as a named function. We c
     activator.register(SubmitOrderCommand, lambda _, __: SubmitOrderCommandHandler())
 
 Multiple Handlers for the Same Message Type
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can register multiple handlers for the same message type, and all handlers will be invoked when a message of that type is received:
 

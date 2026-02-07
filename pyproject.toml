@@ -219,3 +219,9 @@ include = [
   "testing",
   "tests",
 ]
+
+[tool.interrogate]
+omit-covered-files = true
+verbose = 2
+fail-under = 1
+whitelist-regex = ["test_.*"]
