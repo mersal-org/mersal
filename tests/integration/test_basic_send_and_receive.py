@@ -144,7 +144,7 @@ class TestBasicSendAndReceiveIntegration:
 
         assert message2.internal == [1]
 
-    async def test_using_custom_messsage_id_generator(self):
+    async def test_using_custom_message_id_generator(self):
         network = InMemoryNetwork()
         queue_address = "test-queue"
         activator = BuiltinHandlerActivator()

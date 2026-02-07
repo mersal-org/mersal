@@ -4,10 +4,10 @@ from copy import deepcopy
 
 from mersal.retry import InMemoryErrorTracker
 
-__all__ = ("ErrorTrackerTestTouble",)
+__all__ = ("ErrorTrackerTestDouble",)
 
 
-class ErrorTrackerTestTouble(InMemoryErrorTracker):
+class ErrorTrackerTestDouble(InMemoryErrorTracker):
     def __init__(self, maximum_failure_times: int = 5) -> None:
         super().__init__(maximum_failure_times=maximum_failure_times)
 

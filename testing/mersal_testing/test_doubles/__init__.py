@@ -6,7 +6,7 @@ from .messages.logical_message_builder import (
 from .messages.transport_message_builder import TransportMessageBuilder
 from .outbox.outbox_storage_test_double import OutboxStorageTestDouble
 from .retry.error_handler_spy import ErrorHandlerSpy
-from .retry.error_tracker_test_double import ErrorTrackerTestTouble
+from .retry.error_tracker_test_double import ErrorTrackerTestDouble
 from .serialization.serializer_test_double import SerializerTestDouble
 from .transport.outgoing_message_builder import OutgoingMessageBuilder
 from .transport.transaction_context_test_double import TransactionContextTestDouble
@@ -18,7 +18,7 @@ __all__ = [
     "AnotherDummyMessage",
     "DummyMessage",
     "ErrorHandlerSpy",
-    "ErrorTrackerTestTouble",
+    "ErrorTrackerTestDouble",
     "LogicalMessageBuilder",
     "OutboxStorageTestDouble",
     "OutgoingMessageBuilder",

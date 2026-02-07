@@ -24,7 +24,7 @@ from mersal.transport.in_memory import (
 )
 from mersal.types.callable_types import AsyncAnyCallable
 from mersal_testing.test_doubles import (
-    ErrorTrackerTestTouble,
+    ErrorTrackerTestDouble,
     TransportMessageBuilder,
 )
 
@@ -82,8 +82,8 @@ class TestDefaultRetryStrategy:
         return DeadletterQueueErrorHandler(transport=transport, error_queue_name=error_queue_name)
 
     @pytest.fixture(scope="function")
-    def error_tracker(self) -> ErrorTrackerTestTouble:
-        return ErrorTrackerTestTouble(maximum_failure_times=2)
+    def error_tracker(self) -> ErrorTrackerTestDouble:
+        return ErrorTrackerTestDouble(maximum_failure_times=2)
 
     @pytest.fixture(scope="function")
     def fail_fast_checker(self) -> DefaultFailFastChecker:
@@ -171,7 +171,7 @@ class TestDefaultRetryStrategy:
     @pytest.fixture(scope="function")
     async def assert_error_tracker(
         self,
-        error_tracker: ErrorTrackerTestTouble,
+        error_tracker: ErrorTrackerTestDouble,
         message_id: uuid.UUID,
     ):
         async def assertion(has_failed_too_many_times: bool, exceptions: list[Exception] | None = None):
@@ -205,7 +205,7 @@ class TestDefaultRetryStrategy:
         message_id: uuid.UUID,
         assertion_helper: TransactionContextAssertionHelper,
         assert_error_tracker,
-        error_tracker: ErrorTrackerTestTouble,
+        error_tracker: ErrorTrackerTestDouble,
     ):
         exception = ValueError()
 
@@ -263,7 +263,7 @@ class TestDefaultRetryStrategy:
         self,
         run_subject_process,
         message_id: uuid.UUID,
-        error_tracker: ErrorTrackerTestTouble,
+        error_tracker: ErrorTrackerTestDouble,
         get_error_queue_latest_message: Callable[..., TransportMessage | None],
     ):
         exception = ValueError()
@@ -283,7 +283,7 @@ class TestDefaultRetryStrategy:
         run_subject_process,
         message_id: uuid.UUID,
         transport_message: TransportMessage,
-        error_tracker: ErrorTrackerTestTouble,
+        error_tracker: ErrorTrackerTestDouble,
         get_error_queue_latest_message: Callable[..., TransportMessage | None],
     ):
         exception = ValueError()

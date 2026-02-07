@@ -83,7 +83,7 @@ class TestDefaultConfigurator:
             ],
         )
 
-        steps = subject.configurator._dependecy_resolver[IncomingPipeline]()
+        steps = subject.configurator._dependency_resolver[IncomingPipeline]()
         assert steps
         assert isinstance(steps[-1], AnotherDummyStep)
 

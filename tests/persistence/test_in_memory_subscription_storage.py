@@ -5,13 +5,13 @@ from mersal.persistence.in_memory import (
     InMemorySubscriptionStore,
 )
 
-__all__ = ("TestInMemorySubcriptionStorage",)
+__all__ = ("TestInMemorySubscriptionStorage",)
 
 
 pytestmark = pytest.mark.anyio
 
 
-class TestInMemorySubcriptionStorage:
+class TestInMemorySubscriptionStorage:
     async def test_register_unregister_and_get(self):
         subject = InMemorySubscriptionStorage.decentralized()
         topic1 = "T1"

@@ -28,7 +28,7 @@ class IdempotencyCheckerStep(IncomingStep):
 
         try:
             await self.message_tracker.track_message(message_id, transaction_context)
-        except Exception:
+        except Exception:  # noqa: BLE001
             self._handle_duplicate(message, invokers)
             await next_step()
             return

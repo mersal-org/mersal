@@ -126,6 +126,7 @@ class Mersal:
             outbox: OutboxConfig | None = None,
             pdb_on_exception: bool | None = None,
             message_id_generator: MessageIdGenerator | None = None,
+            max_parallelism: number of messages to be handled in parallel.
         """
 
         if router and default_router_registration:

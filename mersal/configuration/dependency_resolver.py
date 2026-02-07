@@ -17,11 +17,11 @@ class DependencyResolver:
         self._final_instances: dict[type, Any] = {}
         self._is_running_decorators: dict[type, bool] = defaultdict(lambda: False)
 
-    def register(self, depedency_type: type, resolver: Resolver) -> None:
-        self._register_resolvers[depedency_type] = resolver
+    def register(self, dependency_type: type, resolver: Resolver) -> None:
+        self._register_resolvers[dependency_type] = resolver
 
-    def decorate(self, depedency_type: type, resolver: Resolver) -> None:
-        self._decorate_resolvers[depedency_type].append(resolver)
+    def decorate(self, dependency_type: type, resolver: Resolver) -> None:
+        self._decorate_resolvers[dependency_type].append(resolver)
 
     def has_registration_resolver(self, dependency_type: type) -> bool:
         return self._register_resolvers.get(dependency_type) is not None

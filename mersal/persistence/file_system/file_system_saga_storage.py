@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import uuid
 from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -11,7 +12,6 @@ from mersal.sagas.saga_data import SagaData
 from mersal.sagas.saga_storage import SagaStorage
 
 if TYPE_CHECKING:
-    import uuid
     from collections.abc import Sequence
 
     from mersal.sagas import CorrelationProperty
@@ -57,7 +57,7 @@ class FileSystemSagaStorage(SagaStorage):
         if path.exists():
             raise Exception("SagaData already exist")
 
-        self._verify_correllation_properties_uniqueness(saga_data, correlation_properties)
+        self._verify_correlation_properties_uniqueness(saga_data, correlation_properties)
         if saga_data.revision != 0:
             raise Exception("Inserted data must have revision=0")
 
@@ -69,7 +69,7 @@ class FileSystemSagaStorage(SagaStorage):
         correlation_properties: Sequence[CorrelationProperty],
         transaction_context: TransactionContext,
     ) -> None:
-        self._verify_correllation_properties_uniqueness(saga_data, correlation_properties)
+        self._verify_correlation_properties_uniqueness(saga_data, correlation_properties)
         path = self._saga_path(saga_data.id)
         if not path.exists():
             raise Exception("Saga couldn't be found")
@@ -110,7 +110,7 @@ class FileSystemSagaStorage(SagaStorage):
                 result.append(self._read_saga(path))
         return result
 
-    def _verify_correllation_properties_uniqueness(
+    def _verify_correlation_properties_uniqueness(
         self,
         new_or_updated_saga_data: SagaData,
         correlation_properties: Sequence[CorrelationProperty],
@@ -146,8 +146,6 @@ def _serialize_saga_data(saga_data: SagaData) -> dict:
 
 
 def _deserialize_saga_data(raw: dict) -> SagaData:
-    import uuid
-
     module = importlib.import_module(raw["data_type_module"])
     data_type = getattr(module, raw["data_type_name"])
     data_dict = raw["data"]

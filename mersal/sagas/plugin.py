@@ -27,15 +27,15 @@ __all__ = ("SagaPlugin",)
 class SagaPlugin(Plugin):
     def __init__(self, config: SagaConfig):
         self._storage = config.storage
-        self._corelation_error_handler = config.correlation_error_handler
+        self._correlation_error_handler = config.correlation_error_handler
 
     def __call__(self, configurator: StandardConfigurator) -> None:
-        from mersal.pipeline import ActivateHandlersStep
+        from mersal.pipeline import ActivateHandlersStep  # noqa: PLC0415
 
         def decorate_pipeline(configurator: StandardConfigurator) -> Pipeline:
             correlation_error_handler = (
-                self._corelation_error_handler
-                if self._corelation_error_handler is not None
+                self._correlation_error_handler
+                if self._correlation_error_handler is not None
                 else DefaultCorrelationErrorHandler()
             )
             step = LoadSagaDataStep(

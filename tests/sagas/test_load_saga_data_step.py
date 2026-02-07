@@ -369,7 +369,7 @@ class TestLoadSagaDataStep:
 
         assert not storage._store.get(saga.data.id)
 
-    async def test_deleting_existings_sagas_marked_as_completed(
+    async def test_deleting_existing_sagas_marked_as_completed(
         self, subject: LoadSagaDataStep, storage: InMemorySagaStorage
     ):
         message = LogicalMessageBuilder.build(_bytes=Message1(user_id=10))
@@ -415,7 +415,7 @@ class TestLoadSagaDataStep:
 
         assert not storage._store.get(saga.data.id)
 
-    async def test_not_updating_existings_sagas_marked_as_unchanged(
+    async def test_not_updating_existing_sagas_marked_as_unchanged(
         self, subject: LoadSagaDataStep, storage: InMemorySagaStorage
     ):
         message = LogicalMessageBuilder.build(_bytes=Message1(user_id=10))

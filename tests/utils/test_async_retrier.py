@@ -30,7 +30,7 @@ def subject_maker() -> AsyncRetrierMaker:
 
 
 class TestAsyncRetrier:
-    async def test_returns_after_successfull_invocation(self, subject_maker: AsyncRetrierMaker):
+    async def test_returns_after_successful_invocation(self, subject_maker: AsyncRetrierMaker):
         counter = Counter()
         subject = subject_maker(delays=[0.1])
 

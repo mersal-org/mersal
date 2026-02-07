@@ -42,6 +42,7 @@ class BasicTransportTest:
                 await context.complete()
 
     async def test_empty_queue_returns_none_for_receive(self, transport_maker: TransportMaker) -> None:
+        """When a queue is empty, invoking the `receive` method should return `None`."""
         transport = transport_maker(input_queue_address="moon")
 
         async def _assert(context: DefaultTransactionContext) -> None:
@@ -51,6 +52,7 @@ class BasicTransportTest:
         await self.assert_with_context(_assert)
 
     async def test_can_send_and_receive(self, transport_maker: TransportMaker) -> None:
+        """Simple sending of two messages and asserting they are received."""
         transport1_address = "ad1"
         transport2_address = "ad2"
         transport1 = transport_maker(input_queue_address=transport1_address)

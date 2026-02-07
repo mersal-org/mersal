@@ -49,8 +49,8 @@ class LoadSagaDataStep(IncomingStep):
     async def __call__(self, context: IncomingStepContext, next_step: AsyncAnyCallable) -> None:
         handler_invokers = context.load(HandlerInvokers)
         transaction_context = context.load(TransactionContext)  # type: ignore[type-abstract]
-        messaage = handler_invokers.message
-        message_type = type(messaage.body)
+        message = handler_invokers.message
+        message_type = type(message.body)
         saga_invokers: Iterable[SagaHandlerInvoker] = filter(
             lambda invoker: isinstance(invoker, SagaHandlerInvoker),
             handler_invokers,
@@ -71,7 +71,7 @@ class LoadSagaDataStep(IncomingStep):
                     saga.data = saga.generate_new_data()
                     created_sagas.append(SagasOperationWrapper(saga.data, message_correlation_properties, saga))
                 else:
-                    await self.correlation_error_handler(saga.correlation_properties, saga_invoker, messaage)
+                    await self.correlation_error_handler(saga.correlation_properties, saga_invoker, message)
             else:
                 loaded_sagas.append(SagasOperationWrapper(saga.data, message_correlation_properties, saga))
         await next_step()

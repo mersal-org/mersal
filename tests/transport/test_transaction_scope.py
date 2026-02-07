@@ -27,7 +27,7 @@ class TestTransactionScope:
         assert AmbientContext().current is context1
 
     async def test_it_closes_scope_transaction_context(self):
-        async with TransactionScope(transaction_context_factory=lambda: TransactionContextTestDouble()) as scope:
+        async with TransactionScope(transaction_context_factory=TransactionContextTestDouble) as scope:
             scope_context: TransactionContextTestDouble = scope.transaction_context  # type: ignore
 
         assert scope_context._close_calls == 1
@@ -40,7 +40,7 @@ class TestTransactionScope:
 
     async def test_it_completes_transaction_context(self):
         context = None  # type: ignore
-        async with TransactionScope(transaction_context_factory=lambda: TransactionContextTestDouble()) as scope:
+        async with TransactionScope(transaction_context_factory=TransactionContextTestDouble) as scope:
             context: TransactionContextTestDouble = scope.transaction_context  # type: ignore
 
         await scope.complete()

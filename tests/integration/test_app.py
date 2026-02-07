@@ -15,7 +15,7 @@ from mersal_testing.message_handlers.message_handler_that_throws import (
 from mersal_testing.messages import BasicMessageA, BasicMessageB
 from mersal_testing.test_doubles.retry.error_handler_spy import ErrorHandlerSpy
 from mersal_testing.test_doubles.retry.error_tracker_test_double import (
-    ErrorTrackerTestTouble,
+    ErrorTrackerTestDouble,
 )
 
 __all__ = ("TestAppIntegration",)
@@ -39,7 +39,7 @@ class TestAppIntegration:
         handler1 = MessageHandlerThatThrows(exception=SpecialException("I am failing fast"))
         handler2 = MessageHandlerThatThrows(exception=Exception("Do not fail fast"))
         error_handler = ErrorHandlerSpy()
-        error_tracker = ErrorTrackerTestTouble(maximum_failure_times=5)
+        error_tracker = ErrorTrackerTestDouble(maximum_failure_times=5)
 
         activator.register(BasicMessageA, lambda _, __: handler1)
         activator.register(BasicMessageB, lambda _, __: handler2)

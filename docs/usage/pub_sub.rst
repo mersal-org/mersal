@@ -40,7 +40,7 @@ With a Mersal app, we can subscribe to any message using the :py:meth:`mersal.ap
         #...
     )
 
-    await app.subscribe(OrderProcssedEvent)
+    await app.subscribe(OrderProcessedEvent)
 
 Autosubscribe
 ^^^^^^^^^^^^^^^^

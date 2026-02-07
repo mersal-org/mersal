@@ -57,7 +57,7 @@ class ActivateHandlersStep(IncomingStep):
                 transaction_context,
             )
 
-            from mersal.sagas.saga import SagaBase
+            from mersal.sagas.saga import SagaBase  # noqa: PLC0415
 
             if isinstance(_handler_with_message.handler, SagaBase):
                 invoker = SagaHandlerInvoker(_handler_with_message.handler, handler_invoker)

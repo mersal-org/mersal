@@ -45,7 +45,7 @@ class InMemorySagaStorage(SagaStorage):
         if self._store.get(saga_data.id):
             raise Exception("SagaData already exist")
 
-        self._verify_correllation_properties_uniqueness(saga_data, correlation_properties)
+        self._verify_correlation_properties_uniqueness(saga_data, correlation_properties)
         if saga_data.revision != 0:
             raise Exception("Inserted data must have revision=0")
 
@@ -57,7 +57,7 @@ class InMemorySagaStorage(SagaStorage):
         correlation_properties: Sequence[CorrelationProperty],
         transaction_context: TransactionContext,
     ) -> None:
-        self._verify_correllation_properties_uniqueness(saga_data, correlation_properties)
+        self._verify_correlation_properties_uniqueness(saga_data, correlation_properties)
         current_saga_data = self._store.get(saga_data.id)
         if not current_saga_data:
             raise Exception("Saga couldn't be found")
@@ -76,7 +76,7 @@ class InMemorySagaStorage(SagaStorage):
 
         saga_data.revision += 1
 
-    def _verify_correllation_properties_uniqueness(
+    def _verify_correlation_properties_uniqueness(
         self,
         new_or_updated_saga_data: SagaData,
         correlation_properties: Sequence[CorrelationProperty],
