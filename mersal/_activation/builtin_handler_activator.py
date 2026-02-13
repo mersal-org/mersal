@@ -55,7 +55,12 @@ class BuiltinHandlerActivator:
                 "BuiltinHandlerActivator get_handlers called outside of a transaction.",
             )
 
-        return [x(message_context, self.app) for x in self._handler_factories.get(type(message), [])]
+        handlers: list[MessageHandler[MessageT]] = []
+        for cls in type(message).__mro__:
+            if cls is object:
+                continue
+            handlers.extend(x(message_context, self.app) for x in self._handler_factories.get(cls, []))
+        return handlers
 
     def register(
         self,

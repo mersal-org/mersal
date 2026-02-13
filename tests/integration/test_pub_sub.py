@@ -29,6 +29,10 @@ class PublishedMessage:
     pass
 
 
+class ChildPublishedMessage(PublishedMessage):
+    pass
+
+
 class DummyMessageHandler:
     def __init__(self) -> None:
         self.calls = 0
@@ -207,3 +211,43 @@ class TestPubSubIntegration:
         assert handler
         assert handler.published_message is _message
         assert published_message_handler_call_count == 1
+
+    async def test_publish_child_event_delivers_to_parent_subscriber(self):
+        """Test when subscribing to a parent message (super class), the publisher will deliver the event
+        to the subscriber when the event is a child of that parent (subclass).
+        """
+        network = InMemoryNetwork()
+        subscription_store = InMemorySubscriptionStore()
+        queue_address = "test-queue"
+        queue_address2 = "test-queue2"
+
+        activator = BuiltinHandlerActivator()
+        publisher_app = Mersal(
+            "publisher",
+            activator,
+            plugins=[InMemoryTransportPluginConfig(network, queue_address).plugin],
+            subscription_storage=InMemorySubscriptionStorage.centralized(subscription_store),
+        )
+
+        activator2 = BuiltinHandlerActivator()
+        parent_handler_calls = 0
+
+        async def parent_handler(message):
+            nonlocal parent_handler_calls
+            parent_handler_calls += 1
+
+        activator2.register(PublishedMessage, lambda _, __: parent_handler)
+        subscriber_app = Mersal(
+            "subscriber",
+            activator2,
+            plugins=[InMemoryTransportPluginConfig(network, queue_address2).plugin],
+            subscription_storage=InMemorySubscriptionStorage.centralized(subscription_store),
+        )
+
+        await subscriber_app.subscribe(PublishedMessage)
+        await publisher_app.publish(ChildPublishedMessage())
+
+        async with subscriber_app:
+            await sleep(0)
+
+        assert parent_handler_calls == 1

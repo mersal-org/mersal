@@ -292,9 +292,11 @@ class Mersal:
     async def publish(self, event_message: Any, headers: Mapping[str, Any] | None = None) -> None:
         """Publish an event with optional headers."""
 
-        topic = self.topic_name_convention.get_topic_name(type(event_message))
+        topics = [
+            self.topic_name_convention.get_topic_name(cls) for cls in type(event_message).__mro__ if cls is not object
+        ]
 
-        await self._inner_publish(topic, event_message, headers)
+        await self._inner_publish(topics, event_message, headers)
 
     async def subscribe(self, event_type: type) -> None:
         """Subscribe to the passed event type."""
@@ -357,9 +359,13 @@ class Mersal:
         )
         await self.pipeline_invoker(context)
 
-    async def _inner_publish(self, topic: str, event_message: Any, headers: Mapping[str, Any] | None) -> None:
+    async def _inner_publish(
+        self, topics: Sequence[str], event_message: Any, headers: Mapping[str, Any] | None
+    ) -> None:
         message = self._create_message(event_message, headers)
-        subscriber_addresses = await self.subscription_storage.get_subscriber_addresses(topic)
+        subscriber_addresses: set[str] = set()
+        for topic in topics:
+            subscriber_addresses |= await self.subscription_storage.get_subscriber_addresses(topic)
         await self._send(subscriber_addresses, message)
 
     async def _subscribe(self, topic: str) -> None:
