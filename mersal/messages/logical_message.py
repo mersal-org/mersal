@@ -14,5 +14,8 @@ class LogicalMessage:
     def message_label(self) -> str:
         t = self.headers.message_type
         if not t:
-            t = str(type(self.body))
+            try:
+                t = str(type(self.body))
+            except Exception:  # noqa: BLE001
+                t = "unknown"
         return f"{t}/{self.headers.message_id}"

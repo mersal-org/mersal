@@ -53,7 +53,7 @@ def _extract_incoming_context(context: IncomingStepContext) -> dict[str, Any]:
         "pipeline": "incoming",
         "message": transport_message.message_label,
         "message_id": str(transport_message.headers.message_id),
-        "message_type": transport_message.headers.message_type or "unknown",
+        "message_type": transport_message.headers.message_type or transport_message.message_label,
     }
 
 
@@ -64,7 +64,7 @@ def _extract_outgoing_context(context: OutgoingStepContext) -> dict[str, Any]:
     if logical_message:
         result["message"] = logical_message.message_label
         result["message_id"] = str(logical_message.headers.message_id)
-        result["message_type"] = logical_message.headers.message_type or "unknown"
+        result["message_type"] = logical_message.headers.message_type or logical_message.message_label
     else:
         result["message"] = "unknown"
     result["destinations"] = ",".join(destinations) if destinations else "unknown"
