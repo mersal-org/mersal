@@ -1,3 +1,4 @@
-from .worker_factory import Worker, WorkerFactory
+from .worker import Worker
+from .worker_factory import WorkerFactory
 
 __all__ = ["Worker", "WorkerFactory"]
