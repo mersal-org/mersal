@@ -292,7 +292,7 @@ class StandardLoggingPlugin(Plugin):
         self._pipeline_context = pipeline_context or _noop_context
 
     def __call__(self, configurator: StandardConfigurator) -> None:
-        logger = self._config.configure()
+        logger: Logger = self._config.configure()()
         configurator.register(Logger, lambda _: logger)
 
         pipeline_context = self._pipeline_context
