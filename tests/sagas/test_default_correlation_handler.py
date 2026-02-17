@@ -1,5 +1,6 @@
 import pytest
 
+from mersal.logging.null_logger import NullLogger
 from mersal.pipeline.receive.handler_invoker import HandlerInvoker
 from mersal.pipeline.receive.saga_handler_invoker import SagaHandlerInvoker
 from mersal.sagas.default_correlation_error_handler import (
@@ -17,7 +18,7 @@ pytestmark = pytest.mark.anyio
 
 
 async def test_default_correlation_error_handler():
-    subject = DefaultCorrelationErrorHandler()
+    subject = DefaultCorrelationErrorHandler(logger=NullLogger())
 
     call_count = 0
 

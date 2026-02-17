@@ -1,5 +1,4 @@
-import logging
-
+from mersal.logging import Logger
 from mersal.messages.transport_message import TransportMessage
 from mersal.outbox.outbox_message_batch import OutboxMessageBatch
 from mersal.outbox.outbox_storage import OutboxStorage
@@ -22,6 +21,7 @@ class OutboxForwarder:
         periodic_task_factory: PeriodicAsyncTaskFactory,
         transport: Transport,
         outbox_storage: OutboxStorage,
+        logger: Logger,
         forwarding_period: float = 1,
     ) -> None:
         """Initialize ``OutboxForwader``.
@@ -31,6 +31,7 @@ class OutboxForwarder:
                                   The instance is responsible for running the periodic query & send.
             transport: The relevant :class:`Transport <.transport.Transport>`.
             outbox_storage: A storage for outbox messages that implements :class:`OutboxStorage <.outbox.OutboxStorage>`.
+            logger: Logger instance.
             forwarding_period: Period for rechecking the outbox storage (in seconds). Default to 1 second.
         """
         self.transport = transport
@@ -38,7 +39,7 @@ class OutboxForwarder:
         self.forwader = periodic_task_factory.__call__("Outbox-Forwader", self._run, forwarding_period)
         _delays = [0.1, 0.1, 0.1, 0.1, 0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 1, 1, 1, 1, 1]
         self._retrier = AsyncRetrier(_delays)
-        self._logger = logging.getLogger("mersal.outboxForwader")
+        self._logger = logger
 
     async def start(self) -> None:
         await self.forwader.start()
@@ -53,7 +54,7 @@ class OutboxForwarder:
     async def _task(self) -> None:
         batch = await self.outbox_storage.get_next_message_batch()
         if not len(batch):
-            self._logger.debug("Empty batch in outbox")
+            self._logger.debug("outbox.batch.empty")
             await batch.close()
             return
         await self._process_batch(batch)
@@ -67,7 +68,7 @@ class OutboxForwarder:
             await scope.complete()
 
     async def _send_messages(self, batch: OutboxMessageBatch, transaction_context: TransactionContext) -> None:
-        self._logger.debug("Will send %r outbox messages", len(batch))
+        self._logger.debug("outbox.batch.send", batch_size=len(batch))
         for message in batch:
             destination_address = message.destination_address
             transport_message = message.transport_message()
@@ -83,4 +84,4 @@ class OutboxForwarder:
                 )
 
             await self._retrier.run(action)
-        self._logger.debug("Successfully sent %r outbox messages", len(batch))
+        self._logger.debug("outbox.batch.sent", batch_size=len(batch))

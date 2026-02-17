@@ -1,9 +1,9 @@
-import logging
 import pdb  # noqa: T100
 import sys
 from copy import deepcopy
 from typing import Any
 
+from mersal.logging import Logger
 from mersal.messages import TransportMessage
 from mersal.pipeline import IncomingStepContext
 from mersal.transport import TransactionContext
@@ -25,8 +25,9 @@ class DefaultRetryStep(RetryStep):
         error_handler: ErrorHandler,
         fail_fast_checker: FailFastChecker,
         pdb_on_exception: bool,
+        logger: Logger,
     ) -> None:
-        self.logger = logging.getLogger("mersal.receive.simpleRetryStep")
+        self.logger = logger
         self.error_tracker = error_tracker
         self.error_handler = error_handler
         self.fail_fast_checker = fail_fast_checker
@@ -46,23 +47,16 @@ class DefaultRetryStep(RetryStep):
             if self.pdb_on_exception:
                 pdb.post_mortem(sys.exc_info()[2])
                 return
-            self.logger.exception(
-                "Exception raised while handling message %r, will register and error and may retry",
-                transport_message.message_label,
-            )
+            self.logger.exception("retry.error", message=transport_message.message_label, message_id=message_id)
             await self.error_tracker.register_error(message_id, e)
 
             if self.fail_fast_checker.should_fail_fast(message_id, e):
-                self.logger.exception(
-                    "Handling of message %r raised an unforgivable exception, no retries will be made.",
-                    transport_message.message_label,
-                )
+                self.logger.exception("retry.fail_fast", message=transport_message.message_label, message_id=message_id)
                 await self.error_tracker.mark_as_final(message_id)
 
             if await self.error_tracker.has_failed_too_many_times(message_id):
                 self.logger.exception(
-                    "Sending message %r to the deadletter queue.",
-                    transport_message.message_label,
+                    "retry.deadletter", message=transport_message.message_label, message_id=message_id
                 )
                 await self._handle_poisonous_message(transport_message, message_id)
                 transaction_context.set_result(commit=False, ack=True)

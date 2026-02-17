@@ -4,6 +4,8 @@ from mersal.configuration.standard_configurator import (
     StandardConfiguratorResolver,
 )
 from mersal.lifespan import DefaultLifespanHandler, LifespanHandler
+from mersal.logging import Logger
+from mersal.logging.null_logger import NullLogger
 from mersal.persistence.not_implemented import NotImplementedSubscriptionStorage
 from mersal.pipeline import (
     ActivateHandlersStep,
@@ -62,6 +64,7 @@ class DefaultPlugin(Plugin):
     def __call__(self, configurator: StandardConfigurator) -> None:
         self.configurator = configurator
 
+        self._register_default_dependency_if_needed(Logger, lambda _: NullLogger())
         self._register_default_dependency_if_needed(RetryStrategySettings, lambda _: RetryStrategySettings())
         self._register_default_dependency_if_needed(SubscriptionStorage, lambda _: NotImplementedSubscriptionStorage())
         self._register_default_dependency_if_needed(
@@ -93,6 +96,7 @@ class DefaultPlugin(Plugin):
                 error_tracker=config.get(ErrorTracker),  # type: ignore[type-abstract]
                 error_handler=config.get(ErrorHandler),  # type: ignore[type-abstract]
                 fail_fast_checker=config.get(FailFastChecker),  # type: ignore[type-abstract]
+                logger=config.get(Logger),
                 pdb_on_exception=self.pdb_on_exception,
             ),
         )
@@ -152,6 +156,7 @@ class DefaultPlugin(Plugin):
             lambda config: AnyioWorkerFactory(
                 transport=config.get(Transport),  # type: ignore[type-abstract]
                 pipeline_invoker=config.get(PipelineInvoker),  # type: ignore[type-abstract]
+                logger=config.get(Logger),
             ),
         )
 

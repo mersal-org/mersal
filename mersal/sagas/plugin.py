@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from mersal.lifespan.lifespan_hooks_registration_plugin import (
     LifespanHooksRegistrationPluginConfig,
 )
+from mersal.logging import Logger
 from mersal.pipeline import (
     PipelineInjectionPosition,
     PipelineInjector,
@@ -36,7 +37,7 @@ class SagaPlugin(Plugin):
             correlation_error_handler = (
                 self._correlation_error_handler
                 if self._correlation_error_handler is not None
-                else DefaultCorrelationErrorHandler()
+                else DefaultCorrelationErrorHandler(logger=configurator.get(Logger))
             )
             step = LoadSagaDataStep(
                 saga_storage=self._storage,

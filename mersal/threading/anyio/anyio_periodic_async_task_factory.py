@@ -1,5 +1,4 @@
-import logging
-
+from mersal.logging import Logger
 from mersal.threading.periodic_async_task import PeriodicAsyncTask
 from mersal.threading.periodic_async_task_factory import PeriodicAsyncTaskFactory
 from mersal.types import AsyncAnyCallable
@@ -10,8 +9,8 @@ __all__ = ("AnyIOPeriodicTaskFactory",)
 
 
 class AnyIOPeriodicTaskFactory(PeriodicAsyncTaskFactory):
-    def __init__(self) -> None:
-        self.logger = logging.getLogger("mersal.anyIOPeriodicTaskFactory")
+    def __init__(self, logger: Logger) -> None:
+        self.logger = logger
 
     def __call__(self, description: str, task: AsyncAnyCallable, period: float) -> PeriodicAsyncTask:
         return AnyIOPeriodicTask(

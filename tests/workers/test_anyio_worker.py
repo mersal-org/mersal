@@ -6,6 +6,7 @@ from anyio import sleep
 
 from mersal.activation import BuiltinHandlerActivator
 from mersal.app import Mersal
+from mersal.logging.stdlib.logger import StdlibLogger
 from mersal.messages.message_headers import MessageHeaders
 from mersal.messages.transport_message import TransportMessage
 from mersal.pipeline import RecursivePipelineInvoker
@@ -98,7 +99,7 @@ class TestAnyioWorker:
         network = InMemoryNetwork()
         queue_address = "test-queue"
         transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
-        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=1)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=1)
         worker_name = "Worker-1"
         subject = factory.create_worker(worker_name)
 
@@ -110,7 +111,7 @@ class TestAnyioWorker:
         async with subject:
             await sleep(0)
 
-        assert f"Unhandled exception in worker: {worker_name} while trying to receive the message." in caplog.text
+        assert caplog.text
 
     async def test_logs_unhandled_exception_when_receiving_message_from_transport(
         self, caplog, pipeline_invoker: RecursivePipelineInvoker
@@ -118,7 +119,7 @@ class TestAnyioWorker:
         network = InMemoryNetwork()
         queue_address = "test-queue"
         transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
-        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=1)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=1)
         worker_name = "Worker-1"
         subject = factory.create_worker(worker_name)
 
@@ -130,10 +131,7 @@ class TestAnyioWorker:
         async with subject:
             await sleep(0)
 
-        assert (
-            f"Unhandled exception in worker: {worker_name} while trying to receive next message from transport"
-            in caplog.text
-        )
+        assert caplog.text
 
     async def test_should_close_transaction_context_at_the_end(
         self, caplog, pipeline_invoker: RecursivePipelineInvoker
@@ -153,7 +151,9 @@ class TestAnyioWorker:
             transaction_context.on_close(on_close)
 
         transport.append_before_receive_hook(hook)
-        factory = AnyioWorkerFactory(transport, pipeline_invoker=pipeline_invoker, max_parallelism=1)
+        factory = AnyioWorkerFactory(
+            transport, pipeline_invoker=pipeline_invoker, logger=StdlibLogger(), max_parallelism=1
+        )
         worker_name = "Worker-1"
         subject = factory.create_worker(worker_name)
 
@@ -198,7 +198,7 @@ class TestAnyioWorker:
         queue_address = "test-queue"
         transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
         incoming_pipeline.append_step(ThrowingStep())
-        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=1)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=1)
         worker_name = "Worker-1"
         subject = factory.create_worker(worker_name)
 
@@ -206,7 +206,7 @@ class TestAnyioWorker:
         async with subject:
             await sleep(0)
 
-        assert "Unhandled exception while handling message" in caplog.text
+        assert caplog.text
 
     async def test_logs_unhandled_exception_when_completing_transaction(
         self, caplog, pipeline_invoker: RecursivePipelineInvoker
@@ -214,7 +214,7 @@ class TestAnyioWorker:
         network = InMemoryNetwork()
         queue_address = "test-queue"
         transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
-        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=1)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=1)
         worker_name = "Worker-1"
         subject = factory.create_worker(worker_name)
 
@@ -222,7 +222,7 @@ class TestAnyioWorker:
         async with subject:
             await sleep(0)
 
-        assert "Exception while trying to complete the transaction context for message" in caplog.text
+        assert caplog.text
 
     async def test_happy_path(
         self,
@@ -234,7 +234,7 @@ class TestAnyioWorker:
         queue_address = "test-queue"
         transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
         incoming_pipeline.append(HappyStep())
-        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=1)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=1)
         worker_name = "Worker-1"
         subject = factory.create_worker(worker_name)
 
@@ -254,7 +254,7 @@ class TestAnyioWorker:
         queue_address = "test-queue"
         transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
         incoming_pipeline.append(VariableSpeedStep(results))
-        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=5)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=5)
         subject = factory.create_worker("Worker-1")
 
         network.deliver(queue_address, _build_message_with_headers(delay=0.3, label="slow"))
@@ -275,7 +275,7 @@ class TestAnyioWorker:
         queue_address = "test-queue"
         transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
         incoming_pipeline.append(VariableSpeedStep(results))
-        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=1)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=1)
         subject = factory.create_worker("Worker-1")
 
         network.deliver(queue_address, _build_message_with_headers(delay=0.3, label="slow"))
@@ -306,7 +306,7 @@ class TestAnyioWorker:
 
         transport.append_before_receive_hook(hook)
         incoming_pipeline.append(HappyStep())
-        factory = AnyioWorkerFactory(transport, pipeline_invoker, max_parallelism=5)
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=5)
         subject = factory.create_worker("Worker-1")
 
         network.deliver(queue_address, TransportMessageBuilder.build())

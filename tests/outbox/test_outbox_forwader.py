@@ -1,6 +1,7 @@
 import anyio
 import pytest
 
+from mersal.logging.null_logger import NullLogger
 from mersal.outbox.outbox_forwarder import OutboxForwarder
 from mersal.threading.anyio.anyio_periodic_async_task_factory import (
     AnyIOPeriodicTaskFactory,
@@ -37,9 +38,10 @@ class TestOutboxForwader:
         ]
         await outbox_storage.save(_messages, DefaultTransactionContext())
         subject = OutboxForwarder(
-            periodic_task_factory=AnyIOPeriodicTaskFactory(),
+            periodic_task_factory=AnyIOPeriodicTaskFactory(logger=NullLogger()),
             transport=transport,
             outbox_storage=outbox_storage,
+            logger=NullLogger(),
             forwarding_period=0.1,
         )
         await subject.start()
@@ -81,9 +83,10 @@ class TestOutboxForwader:
         ]
         await outbox_storage.save(_messages, DefaultTransactionContext())
         subject = OutboxForwarder(
-            periodic_task_factory=AnyIOPeriodicTaskFactory(),
+            periodic_task_factory=AnyIOPeriodicTaskFactory(logger=NullLogger()),
             transport=transport,
             outbox_storage=outbox_storage,
+            logger=NullLogger(),
             forwarding_period=0.1,
         )
         await subject.start()
@@ -112,9 +115,10 @@ class TestOutboxForwader:
         _messages = []
         await outbox_storage.save(_messages, DefaultTransactionContext())
         subject = OutboxForwarder(
-            periodic_task_factory=AnyIOPeriodicTaskFactory(),
+            periodic_task_factory=AnyIOPeriodicTaskFactory(logger=NullLogger()),
             transport=transport,
             outbox_storage=outbox_storage,
+            logger=NullLogger(),
             forwarding_period=0.1,
         )
         await subject.start()

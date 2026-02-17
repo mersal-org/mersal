@@ -1,10 +1,10 @@
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
-from logging import Logger
 
 import anyio
 from anyio import CancelScope, sleep
 
+from mersal.logging import Logger
 from mersal.threading.periodic_async_task import PeriodicAsyncTask
 from mersal.types import AsyncAnyCallable
 
@@ -46,4 +46,4 @@ class AnyIOPeriodicTask(PeriodicAsyncTask):
             try:
                 await self.task()
             except Exception:
-                self.logger.exception("An exception has happened in a periodic task")
+                self.logger.exception("periodic_task.error", task=self.description)

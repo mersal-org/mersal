@@ -2,6 +2,7 @@ from mersal.configuration import StandardConfigurator
 from mersal.lifespan.lifespan_hooks_registration_plugin import (
     LifespanHooksRegistrationPluginConfig,
 )
+from mersal.logging import Logger
 from mersal.outbox.config import OutboxConfig
 from mersal.outbox.outbox_forwarder import OutboxForwarder
 from mersal.outbox.outbox_incoming_step import (
@@ -44,10 +45,12 @@ class OutboxPlugin(Plugin):
             return pipeline
 
         def register_forwarder(configurator: StandardConfigurator) -> OutboxForwarder:
+            logger = configurator.get(Logger)
             return OutboxForwarder(
-                AnyIOPeriodicTaskFactory(),
+                AnyIOPeriodicTaskFactory(logger=logger),
                 configurator.get(Transport),  # type: ignore[type-abstract]
                 configurator.get(OutboxStorage),  # type: ignore[type-abstract]
+                logger=logger,
             )
 
         def register_outbox_storage(

@@ -1,6 +1,7 @@
 import anyio
 import pytest
 
+from mersal.logging.null_logger import NullLogger
 from mersal.threading import AnyIOPeriodicTaskFactory
 
 __all__ = ("test_it_sleeps_and_runs_action",)
@@ -17,7 +18,7 @@ async def test_it_sleeps_and_runs_action():
         async def task(self):
             self.total += 1
 
-    factory = AnyIOPeriodicTaskFactory()
+    factory = AnyIOPeriodicTaskFactory(logger=NullLogger())
     instance = Spam()
     task = factory("Test", instance.task, 0.1)
     await task.start()

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from contextlib import AsyncExitStack
 from typing import TYPE_CHECKING, Any
 
@@ -17,6 +16,7 @@ from mersal.transport.ambient_context import AmbientContext
 
 if TYPE_CHECKING:
     from mersal.app import Mersal
+    from mersal.logging import Logger
     from mersal.messages import TransportMessage
 
 __all__ = ("AnyioWorker",)
@@ -30,8 +30,9 @@ class AnyioWorker:
         app: Mersal,
         pipeline_invoker: PipelineInvoker,
         max_parallelism: int,
+        logger: Logger,
     ) -> None:
-        self.logger = logging.getLogger("mersal.defaultWorker")
+        self.logger = logger
         self.name = name
         self.transport = transport
         self.app = app
@@ -44,7 +45,6 @@ class AnyioWorker:
         self._processing_tg: anyio.TaskGroup | None = None
 
     async def _stop(self) -> None:
-        self.logger.info("The worker %r will stop now.", self.name)
         self._running = False
         if self._cancel_scope:
             self._cancel_scope.cancel()
@@ -52,7 +52,6 @@ class AnyioWorker:
             await self._exit_stack.aclose()
 
     async def __aenter__(self) -> AnyioWorker:
-        self.logger.info("The worker %r will start now.", self.name)
         self._exit_stack = AsyncExitStack()
         self._parallelism_limiter = anyio.Semaphore(self._max_parallelism)
         self._processing_tg = anyio.create_task_group()
@@ -83,10 +82,7 @@ class AnyioWorker:
             try:
                 await self._receive_message()
             except Exception:
-                self.logger.exception(
-                    "Unhandled exception in worker: %s while trying to receive the message.",
-                    self.name,
-                )
+                self.logger.exception("worker.receive.error", worker=self.name)
             await sleep(0)
 
     async def _receive_message(self) -> None:
@@ -97,10 +93,7 @@ class AnyioWorker:
         try:
             transport_message = await self.transport.receive(transaction_context)
         except Exception:
-            self.logger.exception(
-                "Unhandled exception in worker: %s while trying to receive next message from transport",
-                self.name,
-            )
+            self.logger.exception("worker.transport.receive.error", worker=self.name)
 
         if transport_message:
             self._processing_tg.start_soon(self._process_message_in_background, transport_message, transaction_context)
@@ -118,10 +111,7 @@ class AnyioWorker:
                 try:
                     await transaction_context.__aexit__(None, None, None)
                 except Exception:
-                    self.logger.exception(
-                        "Exception while trying to close transaction context for message %r",
-                        message.message_label,
-                    )
+                    self.logger.exception("worker.transaction.close.error", message=message.message_label)
                 self._parallelism_limiter.release()
 
     async def _process_message(self, message: TransportMessage, transaction_context: TransactionContext) -> None:
@@ -132,11 +122,8 @@ class AnyioWorker:
             try:
                 await transaction_context.complete()
             except Exception:
-                self.logger.exception(
-                    "Exception while trying to complete the transaction context for message %r",
-                    message.message_label,
-                )
+                self.logger.exception("worker.transaction.complete.error", message=message.message_label)
         except Exception:
-            self.logger.exception("Unhandled exception while handling message %r", message.message_label)
+            self.logger.exception("worker.message.error", message=message.message_label)
         finally:
             AmbientContext().current = None

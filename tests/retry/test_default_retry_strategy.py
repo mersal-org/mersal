@@ -4,6 +4,7 @@ from typing import Any, Literal
 
 import pytest
 
+from mersal.logging.null_logger import NullLogger
 from mersal.messages import TransportMessage
 from mersal.pipeline.incoming_step_context import IncomingStepContext
 from mersal.retry import (
@@ -96,7 +97,7 @@ class TestDefaultRetryStrategy:
         error_tracker: InMemoryErrorTracker,
         fail_fast_checker: DefaultFailFastChecker,
     ) -> DefaultRetryStep:
-        strategy = DefaultRetryStrategy(error_tracker, error_handler, fail_fast_checker)
+        strategy = DefaultRetryStrategy(error_tracker, error_handler, fail_fast_checker, logger=NullLogger())
         return strategy.get_retry_step()
 
     @pytest.fixture(scope="function")

@@ -14,6 +14,7 @@ from mersal.configuration.standard_configurator import (
 from mersal.idempotency import IdempotencyConfig, IdempotencyPlugin
 from mersal.lifespan import LifespanHandler
 from mersal.lifespan.autosubscribe import AutosubscribeConfig
+from mersal.logging import Logger, LoggingConfig
 from mersal.messages import LogicalMessage, MessageHeaders
 from mersal.outbox.config import OutboxConfig
 from mersal.outbox.plugin import OutboxPlugin
@@ -95,6 +96,8 @@ class Mersal:
         pdb_on_exception: bool | None = None,
         message_id_generator: MessageIdGenerator | None = None,
         max_parallelism: int = 1,
+        logging_config: LoggingConfig | None = None,
+        debug: bool = False,
     ):
         """Initializes the Mersal app.
 
@@ -127,6 +130,8 @@ class Mersal:
             pdb_on_exception: bool | None = None,
             message_id_generator: MessageIdGenerator | None = None,
             max_parallelism: number of messages to be handled in parallel.
+            logging_config: configuration for the logging system.
+            debug: controls debug mode.
         """
 
         if router and default_router_registration:
@@ -197,6 +202,12 @@ class Mersal:
 
         if outbox is not None:
             plugins.append(OutboxPlugin(outbox))
+
+        self.logging_config = None
+        if logging_config is not None:
+            self.logging_config = logging_config
+            plugins.append(logging_config.plugin)
+
         if message_id_generator is not None:
             plugins.append(generic_registration_plugin(message_id_generator, MessageIdGenerator))
 
@@ -215,14 +226,14 @@ class Mersal:
 
         self.configurator.resolve()
         self.router = self.configurator.get(Router)  # type: ignore[type-abstract]
-        self.logger = logging.getLogger("mersal")
-        self.logger.addHandler(logging.NullHandler())
+        self.logger: Logger = self.configurator.get(Logger)
         self.transport = self.configurator.get(Transport)  # type: ignore[type-abstract]
         self.worker_factory = self.configurator.get(WorkerFactory)  # type: ignore[type-abstract]
         self.worker_factory.app = self
         self.subscription_storage = self.configurator.get(SubscriptionStorage)  # type: ignore[type-abstract]
         self.topic_name_convention = self.configurator.get(TopicNameConvention)  # type: ignore[type-abstract]
         self.pipeline_invoker = self.configurator.get(PipelineInvoker)  # type: ignore[type-abstract]
+        self.debug = debug
         self.worker: Worker
         self._create_worker()
         self._exit_stack: AsyncExitStack | None = None
@@ -262,12 +273,6 @@ class Mersal:
         logical_message = self._create_message(command_message, headers)
 
         destination_address = await self.router.get_destination_address(logical_message)
-        self.logger.info(
-            "The app named '%r' is about to send %r to %r",
-            self.name,
-            type(command_message),
-            destination_address,
-        )
         addresses = [destination_address]
         await self._send(set(addresses), logical_message)
 
@@ -277,12 +282,6 @@ class Mersal:
         headers: Mapping[str, Any] | None = None,
     ) -> None:
         """Send a message to the address of the configured transport."""
-        self.logger.info(
-            "The app named '%r' is about to send %r locally",
-            self.name,
-            type(command_message),
-        )
-
         destination_address = self.transport.address
         logical_message = self._create_message(command_message, headers)
 
@@ -318,10 +317,7 @@ class Mersal:
                 try:
                     await transaction_context.complete()
                 except:  # noqa: E722
-                    self.logger.exception(
-                        "Exception while trying to complete the transaction context when sending %r",
-                        logical_message.message_label,
-                    )
+                    self.logger.exception("send.transaction.complete.error", message=logical_message.message_label)
         else:
             await self._invoke_send(destination_addresses, logical_message, transaction_context)
 
@@ -345,13 +341,6 @@ class Mersal:
         logical_message: LogicalMessage,
         transaction_context: TransactionContext,
     ) -> None:
-        self.logger.info(
-            "The app named '%r' is about to send %r with id: %r to destination addresses %r",
-            self.name,
-            str(type(logical_message.body)),
-            str(logical_message.headers.get("message_id", "N/A")),
-            str(destination_addresses),
-        )
         context = OutgoingStepContext(
             logical_message,
             transaction_context,
@@ -381,5 +370,14 @@ class Mersal:
         return LogicalMessage(body, _headers)
 
     def _create_worker(self) -> None:
-        self.logger.info("The app named '%r' is creating a worker", self.name)
         self.worker = self.worker_factory.create_worker(self.name)
+
+    @property
+    def debug(self) -> bool:
+        return self._debug
+
+    @debug.setter
+    def debug(self, value: bool) -> None:
+        if self.logger and self.logging_config:
+            self.logging_config.set_level(self.logger, logging.DEBUG if value else logging.INFO)
+        self._debug = value

@@ -6,6 +6,7 @@ from .anyio_worker import AnyioWorker
 
 if TYPE_CHECKING:
     from mersal.app import Mersal
+    from mersal.logging import Logger
     from mersal.pipeline import PipelineInvoker
     from mersal.transport import Transport
 
@@ -17,10 +18,12 @@ class AnyioWorkerFactory:
         self,
         transport: Transport,
         pipeline_invoker: PipelineInvoker,
+        logger: Logger,
         max_parallelism: int = 1,
     ) -> None:
         self.transport = transport
         self.pipeline_invoker = pipeline_invoker
+        self.logger = logger
         self.max_parallelism = max_parallelism
         self.app: Mersal = None  # type: ignore[assignment]
 
@@ -34,4 +37,5 @@ class AnyioWorkerFactory:
             app=self.app,
             pipeline_invoker=self.pipeline_invoker,
             max_parallelism=self.max_parallelism,
+            logger=self.logger,
         )
