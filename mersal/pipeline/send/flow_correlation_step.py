@@ -31,6 +31,9 @@ class FlowCorrelationStep:
             headers[MessageHeaders.correlation_id_key] = correlation_id
             headers[MessageHeaders.correlation_sequence_key] = correlation_sequence
 
+        if not headers.get(MessageHeaders.causation_id_key):
+            headers[MessageHeaders.causation_id_key] = self._get_causation_id(incoming_step_context, headers)
+
         await next_step()
 
     def _get_correlation_id_and_sequence(
@@ -57,3 +60,12 @@ class FlowCorrelationStep:
             return (correlation_id, correlation_sequence + 1)
 
         return (sent_message_headers.message_id, 0)
+
+    def _get_causation_id(
+        self,
+        incoming_step_context: IncomingStepContext | None,
+        sent_message_headers: MessageHeaders,
+    ) -> Any:
+        if incoming_step_context:
+            return incoming_step_context.load(TransportMessage).headers.message_id
+        return sent_message_headers.message_id

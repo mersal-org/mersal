@@ -9,6 +9,7 @@ class MessageHeaders(UserDict, Mapping[str, Any]):
     message_id_key = "message_id"
     correlation_id_key = "correlation_id"
     correlation_sequence_key = "correlation_sequence"
+    causation_id_key = "causation_id"
 
     @property
     def message_id(self) -> Any | None:
@@ -25,3 +26,7 @@ class MessageHeaders(UserDict, Mapping[str, Any]):
     @property
     def correlation_sequence(self) -> int | None:
         return self.get(self.correlation_sequence_key)
+
+    @property
+    def causation_id(self) -> Any | None:
+        return self.get(self.causation_id_key)

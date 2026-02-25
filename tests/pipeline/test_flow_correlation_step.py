@@ -65,6 +65,7 @@ class TestSetDefaultHeadersStep:
 
         assert message.headers.correlation_id == expected_correlation_id
         assert message.headers.correlation_sequence == expected_correlation_sequence
+        assert message.headers.causation_id == message.headers.message_id
         assert counter.total == 1
 
     @pytest.mark.parametrize(
@@ -132,4 +133,5 @@ class TestSetDefaultHeadersStep:
 
         assert message.headers.correlation_id == expected_correlation_id
         assert message.headers.correlation_sequence == expected_correlation_sequence
+        assert message.headers.causation_id == transport_message.headers.message_id
         assert counter.total == 1
