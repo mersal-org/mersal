@@ -1,5 +1,6 @@
 import uuid
 from collections.abc import Callable
+from datetime import UTC, datetime
 from typing import Any, Protocol
 
 from mersal.messages import LogicalMessage
@@ -29,5 +30,8 @@ class SetDefaultHeadersStep:
 
         if not headers.get("message_id"):
             headers["message_id"] = self.message_id_generator(logical_message)
+
+        if not headers.get("sent_time"):
+            headers["sent_time"] = datetime.now(UTC).isoformat()
 
         await next_step()

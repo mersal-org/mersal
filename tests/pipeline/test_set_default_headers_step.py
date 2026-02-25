@@ -1,6 +1,8 @@
 import uuid
+from datetime import UTC, datetime
 
 import pytest
+import time_machine
 
 from mersal.messages import LogicalMessage
 from mersal.messages.message_headers import MessageHeaders
@@ -69,4 +71,41 @@ class TestSetDefaultHeadersStep:
         await subject(context, counter.task)
 
         assert message.headers.get("message_id") == "message_1"
+        assert counter.total == 1
+
+    @time_machine.travel(datetime(2026, 2, 26, 12, 0, 0, tzinfo=UTC), tick=False)
+    async def test_setting_sent_time_header(self):
+        subject = SetDefaultHeadersStep()
+        message = LogicalMessage(body={}, headers=MessageHeaders())
+
+        transaction_context = DefaultTransactionContext()
+        destination_addresses = DestinationAddresses({"moon", "sun"})
+        context = OutgoingStepContext(
+            message=message,
+            transaction_context=transaction_context,
+            destination_addresses=destination_addresses,
+        )
+        counter = Counter()
+        await subject(context, counter.task)
+
+        assert message.headers.get("sent_time") == "2026-02-26T12:00:00+00:00"
+        assert counter.total == 1
+
+    @time_machine.travel(datetime(2026, 2, 26, 12, 0, 0, tzinfo=UTC), tick=False)
+    async def test_not_overwriting_sent_time_if_it_exists(self):
+        subject = SetDefaultHeadersStep()
+        existing_time = "2025-01-01T00:00:00+00:00"
+        message = LogicalMessage(body={}, headers=MessageHeaders({"sent_time": existing_time}))
+
+        transaction_context = DefaultTransactionContext()
+        destination_addresses = DestinationAddresses({"moon", "sun"})
+        context = OutgoingStepContext(
+            message=message,
+            transaction_context=transaction_context,
+            destination_addresses=destination_addresses,
+        )
+        counter = Counter()
+        await subject(context, counter.task)
+
+        assert message.headers.get("sent_time") == existing_time
         assert counter.total == 1

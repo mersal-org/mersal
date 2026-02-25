@@ -64,6 +64,7 @@ test = [
     "pytest-cov",
     "pytest-xdist",
     "anyio",
+    "time-machine",
 ]
 
 [tool.uv]
