@@ -144,6 +144,38 @@ class TestBasicSendAndReceiveIntegration:
 
         assert message2.internal == [1]
 
+    async def test_sending_and_receiving_using_custom_addresses(self):
+        network = InMemoryNetwork()
+        queue_address1 = "test-queue"
+        queue_address2 = "test-queue2"
+        activator = BuiltinHandlerActivator()
+        _ = DummyMessage()
+        message2 = DummyMessage2()
+        activator.register(DummyMessage, lambda m, b: DummyMessageHandler())
+        activator.register(DummyMessage2, lambda m, b: DummyMessageHandler())
+        router_plugin = DefaultRouterRegistrationConfig({}).plugin
+        plugins1 = [
+            InMemoryTransportPluginConfig(network, queue_address1).plugin,
+            router_plugin,
+        ]
+        plugins2 = [
+            InMemoryTransportPluginConfig(network, queue_address2).plugin,
+            router_plugin,
+        ]
+        app1 = Mersal("m1", activator, plugins=plugins1)
+        app2 = Mersal("m2", activator, plugins=plugins2)
+        await app1.send(
+            message2,
+            {},
+            addresses={
+                "test-queue2",
+            },
+        )
+        async with app2:
+            await sleep(0)
+
+        assert message2.internal == [1]
+
     async def test_using_custom_message_id_generator(self):
         network = InMemoryNetwork()
         queue_address = "test-queue"

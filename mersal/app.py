@@ -268,13 +268,17 @@ class Mersal:
         self,
         command_message: Any,
         headers: Mapping[str, Any] | None = None,
+        addresses: set[str] | None = None,
     ) -> None:
         """Send a message to an address obtained from the configured router."""
         logical_message = self._create_message(command_message, headers)
 
-        destination_address = await self.router.get_destination_address(logical_message)
-        addresses = [destination_address]
-        await self._send(set(addresses), logical_message)
+        if addresses:
+            _addresses = addresses
+        else:
+            destination_address = await self.router.get_destination_address(logical_message)
+            _addresses = [destination_address]
+        await self._send(set(_addresses), logical_message)
 
     async def send_local(
         self,
