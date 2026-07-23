@@ -69,6 +69,7 @@ class TestDispatchIncomingMessageStep:
             message=transport_message,
             transaction_context=transaction_context,
         )
+        context.save(message)
         context.save(invokers)
         counter = Counter()
         await subject(context, counter.task)
