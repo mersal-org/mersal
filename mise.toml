@@ -129,7 +129,7 @@ description = "Run tests"
 run = [
 '''
 echo "{{vars.INFO}} Running test cases... 🧪"
-uv run pytest tests
+uv run pytest tests docs/examples/tests
 echo "{{vars.OK}} Tests complete ✨"
 '''
 ]
@@ -140,7 +140,7 @@ description = "Run tests with coverage"
 run = [
 '''
 echo "{{vars.INFO}} Running test cases... 🧪"
-uv run pytest tests --cov=mersal --cov-report=xml
+uv run pytest tests docs/examples/tests --cov=mersal --cov-report=xml
 echo "{{vars.OK}} Tests complete ✨"
 '''
 ]

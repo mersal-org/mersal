@@ -28,7 +28,7 @@ managed = true
 
 [tool.uv.sources]
 mersal = { workspace = true }
-mersal_polling = { workspace = true }
-mersal_sqlalchemy = { workspace = true }
-mersal_litestar = { workspace = true }
-mersal_msgspec = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
