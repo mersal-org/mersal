@@ -4,14 +4,14 @@ from __future__ import annotations
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
-
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+from importlib.metadata import version as _get_version
 
 project = "Mersal"
 copyright = "2023, Abdulhaq Emhemmed"
 author = "Abdulhaq Emhemmed"
-release = "0.1"
+release = _get_version("mersal")
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

@@ -1,6 +1,6 @@
 [project]
 name = "mersal"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A service bus library."
 authors = [
     { name = "Abdulhaq Emhemmed", email = "abdulhaq.emhemmed@gmail.com" }
@@ -10,10 +10,12 @@ dependencies = [
 ]
 readme = "README.rst"
 requires-python = ">= 3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["service bus", "message bus", "messaging", "async", "asyncio", "sagas"]
 
 classifiers = [
   "Development Status :: 5 - Production/Stable",
-  "License :: OSI Approved :: MIT License",
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3.10",
@@ -31,10 +33,15 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
+[project.urls]
+Homepage = "https://github.com/mersal-org/mersal"
+Documentation = "https://docs.mersal.dev"
+Repository = "https://github.com/mersal-org/mersal"
+Changelog = "https://github.com/mersal-org/mersal/releases"
+"Issue Tracker" = "https://github.com/mersal-org/mersal/issues"
+
 [dependency-groups]
-build = ["bump-my-version"]
 dev = [
-  { include-group = "build" },
   { include-group = "docs" },
   { include-group = "linting" },
   { include-group = "test" },
@@ -139,8 +146,15 @@ known-first-party = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.0.0"
+
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
 
 [tool.hatch.build.targets.wheel]
 packages = ["mersal", "testing/mersal_testing"]
