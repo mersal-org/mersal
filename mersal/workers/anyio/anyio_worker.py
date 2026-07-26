@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import types
 from contextlib import AsyncExitStack
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import anyio
+import anyio.abc
 import anyio.lowlevel
 from anyio import CancelScope
-from typing_extensions import Self
 
 from mersal.pipeline import IncomingStepContext, PipelineInvoker
 from mersal.transport import (
@@ -45,7 +45,7 @@ class AnyioWorker:
         self._running = False
         self._max_parallelism = max_parallelism
         self._parallelism_limiter: anyio.Semaphore | None = None
-        self._processing_tg: anyio.TaskGroup | None = None
+        self._processing_tg: anyio.abc.TaskGroup | None = None
 
     async def _stop(self) -> None:
         self._running = False
@@ -60,7 +60,7 @@ class AnyioWorker:
         self._processing_tg = anyio.create_task_group()
         await self._exit_stack.enter_async_context(self._processing_tg)
         self._cancel_scope = self._processing_tg.cancel_scope
-        self._processing_tg.start_soon(self._run)
+        _ = self._processing_tg.start_soon(self._run)
         return self
 
     async def __aexit__(
@@ -89,6 +89,8 @@ class AnyioWorker:
             await anyio.lowlevel.checkpoint()
 
     async def _receive_message(self) -> None:
+        if self._parallelism_limiter is None or self._processing_tg is None:
+            raise RuntimeError("Worker must be entered as an async context manager before receiving messages")
         await self._parallelism_limiter.acquire()
         transaction_context = DefaultTransactionContextWithOwningApp(self.app)
         await transaction_context.__aenter__()
@@ -99,7 +101,9 @@ class AnyioWorker:
             self.logger.exception("worker.transport.receive.error", worker=self.name)
 
         if transport_message:
-            self._processing_tg.start_soon(self._process_message_in_background, transport_message, transaction_context)
+            _ = self._processing_tg.start_soon(
+                self._process_message_in_background, transport_message, transaction_context
+            )
         else:
             await transaction_context.__aexit__(None, None, None)
             self._parallelism_limiter.release()
@@ -107,6 +111,8 @@ class AnyioWorker:
     async def _process_message_in_background(
         self, message: TransportMessage, transaction_context: TransactionContext
     ) -> None:
+        if self._parallelism_limiter is None:
+            raise RuntimeError("Worker must be entered as an async context manager before processing messages")
         with CancelScope(shield=True):
             try:
                 await self._process_message(message, transaction_context)

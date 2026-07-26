@@ -1,7 +1,5 @@
 from collections.abc import Sequence
-from typing import TypeAlias, cast
-
-from typing_extensions import Self
+from typing import Self, TypeAlias, cast
 
 from .incoming_step import IncomingStep
 from .outgoing_step import OutgoingStep

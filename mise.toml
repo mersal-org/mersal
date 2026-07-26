@@ -149,14 +149,14 @@ echo "{{vars.OK}} Tests complete ✨"
 # Type Checking
 # -----------------------------------------------------------------------------
 
-[tasks."type-check:mypy"]
+[tasks."type-check:ty"]
 quiet = true
-description = "Mypy"
+description = "ty"
 run = [
 '''
-echo "{{vars.INFO}} Running mypy... 🔍"
-uv run dmypy run
-echo "{{vars.OK}} Mypy checks passed ✨"
+echo "{{vars.INFO}} Running ty... 🔍"
+uv run ty check
+echo "{{vars.OK}} ty checks passed ✨"
 '''
 ]
 
@@ -171,12 +171,24 @@ echo "{{vars.OK}} Basedpyright checks passed ✨"
 '''
 ]
 
+[tasks."type-check:mypy"]
+quiet = true
+description = "Mypy"
+run = [
+'''
+echo "{{vars.INFO}} Running mypy... 🔍"
+uv run dmypy run
+echo "{{vars.OK}} Mypy checks passed ✨"
+'''
+]
+
 [tasks.type-check]
 quiet = true
 description = "Type check"
 run = [
-    "{{mise_bin}} run type-check:mypy",
+    "{{mise_bin}} run type-check:ty",
     "{{mise_bin}} run type-check:pyright",
+    "{{mise_bin}} run type-check:mypy",
 ]
 
 # -----------------------------------------------------------------------------

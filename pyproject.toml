@@ -9,7 +9,7 @@ dependencies = [
     "anyio>=4.8.0",
 ]
 readme = "README.rst"
-requires-python = ">= 3.10"
+requires-python = ">= 3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 keywords = ["service bus", "message bus", "messaging", "async", "asyncio", "sagas"]
@@ -18,7 +18,6 @@ classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Natural Language :: English",
   "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -68,6 +67,7 @@ linting = [
     "mypy>=1.15.0",
     "pre-commit",
     "ruff",
+    "ty>=0.0.63",
 ]
 test = [
     "pytest",
@@ -98,7 +98,7 @@ include = [
   "docs/examples/**/*.{py,pyi}",
   "pyproject.toml"
 ]
-target-version = "py310"
+target-version = "py311"
 line-length = 120
 
 src = [
@@ -168,7 +168,7 @@ exclude = ["/.github", "/docs"]
 
 # Type checking configuration
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 enable_error_code = [
   "truthy-bool",
   "truthy-iterable",
@@ -200,11 +200,20 @@ warn_unused_ignores = false
 
 [tool.basedpyright]
 typeCheckingMode = "standard"
-pythonVersion = "3.10"
+pythonVersion = "3.11"
 include = [
   "mersal",
   "testing",
   "tests",
+]
+
+[tool.ty.environment]
+python-version = "3.11"
+
+[tool.ty.src]
+include = [
+  "mersal",
+  "testing",
 ]
 
 [tool.interrogate]

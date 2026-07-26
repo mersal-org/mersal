@@ -37,7 +37,7 @@ class SagaPlugin(Plugin):
             correlation_error_handler = (
                 self._correlation_error_handler
                 if self._correlation_error_handler is not None
-                else DefaultCorrelationErrorHandler(logger=configurator.get(Logger))
+                else DefaultCorrelationErrorHandler(logger=configurator.get(Logger))  # type: ignore[type-abstract]
             )
             step = LoadSagaDataStep(
                 saga_storage=self._storage,
@@ -52,5 +52,5 @@ class SagaPlugin(Plugin):
 
         hooks = [lambda _: AsyncCallable(self._storage)]
 
-        plugin = LifespanHooksRegistrationPluginConfig(on_startup_hooks=hooks).plugin  # type: ignore[arg-type]
+        plugin = LifespanHooksRegistrationPluginConfig(on_startup_hooks=hooks).plugin
         plugin(configurator)

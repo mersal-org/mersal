@@ -4,7 +4,6 @@ from mersal.messages import TransportMessage
 from mersal.transport.outgoing_message import OutgoingMessage
 from mersal.transport.transaction_context import TransactionContext
 from mersal.transport.transport import Transport
-from mersal.types.callable_types import AsyncTransactionContextCallable
 
 from .outbox_incoming_step import OutboxIncomingStep
 from .outbox_storage import OutboxStorage
@@ -42,7 +41,7 @@ class OutboxTransportDecorator:
         if outgoing_messages is None:
             outgoing_messages = []
 
-            async def commit_action(_: AsyncTransactionContextCallable) -> None:
+            async def commit_action(_: TransactionContext) -> None:
                 await self.outbox_storage.save(outgoing_messages, transaction_context)
 
             transaction_context.items[self._outgoing_messages_key] = outgoing_messages

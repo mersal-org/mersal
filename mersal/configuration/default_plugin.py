@@ -96,7 +96,7 @@ class DefaultPlugin(Plugin):
                 error_tracker=config.get(ErrorTracker),  # type: ignore[type-abstract]
                 error_handler=config.get(ErrorHandler),  # type: ignore[type-abstract]
                 fail_fast_checker=config.get(FailFastChecker),  # type: ignore[type-abstract]
-                logger=config.get(Logger),
+                logger=config.get(Logger),  # type: ignore[type-abstract]
                 pdb_on_exception=self.pdb_on_exception,
             ),
         )
@@ -156,7 +156,7 @@ class DefaultPlugin(Plugin):
             lambda config: AnyioWorkerFactory(
                 transport=config.get(Transport),  # type: ignore[type-abstract]
                 pipeline_invoker=config.get(PipelineInvoker),  # type: ignore[type-abstract]
-                logger=config.get(Logger),
+                logger=config.get(Logger),  # type: ignore[type-abstract]
             ),
         )
 

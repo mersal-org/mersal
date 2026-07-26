@@ -7,7 +7,7 @@ from mersal.lifespan import LifespanHandler
 from mersal.plugins import Plugin
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
     from mersal.configuration import StandardConfigurator
     from mersal.types import LifespanHook
@@ -21,8 +21,8 @@ __all__ = (
 
 @dataclass
 class LifespanHooksRegistrationPluginConfig:
-    on_startup_hooks: list[Callable[[StandardConfigurator], LifespanHook]] = field(default_factory=list)
-    on_shutdown_hooks: list[Callable[[StandardConfigurator], LifespanHook]] = field(default_factory=list)
+    on_startup_hooks: Sequence[Callable[[StandardConfigurator], LifespanHook]] = field(default_factory=list)
+    on_shutdown_hooks: Sequence[Callable[[StandardConfigurator], LifespanHook]] = field(default_factory=list)
 
     @property
     def plugin(self) -> LifespanHooksRegistrationPlugin:

@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from typing import TypeAlias
 
 from mersal.pipeline.incoming_step import IncomingStep
 from mersal.pipeline.outgoing_step import OutgoingStep
@@ -9,8 +8,6 @@ from .incoming_step_context import IncomingStepContext
 from .outgoing_step_context import OutgoingStepContext
 from .pipeline import IncomingPipeline, OutgoingPipeline
 from .pipeline_invoker import PipelineInvoker
-
-Step: TypeAlias = IncomingStep | OutgoingStep
 
 __all__ = ("IterativePipelineInvoker",)
 
@@ -26,18 +23,29 @@ class IterativePipelineInvoker(PipelineInvoker):
 
     async def __call__(self, context: IncomingStepContext | OutgoingStepContext) -> None:
         if isinstance(context, IncomingStepContext):
-            await self._invoke_pipeline(self.incoming_steps, context)
+            await self._invoke_incoming_pipeline(self.incoming_steps, context)
         elif isinstance(context, OutgoingStepContext):
-            await self._invoke_pipeline(self.outgoing_steps, context)
+            await self._invoke_outgoing_pipeline(self.outgoing_steps, context)
 
-    async def _invoke_pipeline(self, steps: Sequence[Step], context: IncomingStepContext | OutgoingStepContext) -> None:
+    async def _invoke_incoming_pipeline(self, steps: Sequence[IncomingStep], context: IncomingStepContext) -> None:
         step = _none
         for i in range(len(steps) - 1, -1, -1):
             next_step: AsyncAnyCallable = step
 
             async def _next(i: int = i, next_step: AsyncAnyCallable = next_step) -> None:
-                step_to_invoke = steps[i]
-                await step_to_invoke(context, next_step)  # type: ignore[arg-type]
+                await steps[i](context, next_step)
+
+            step = _next
+
+        await step()
+
+    async def _invoke_outgoing_pipeline(self, steps: Sequence[OutgoingStep], context: OutgoingStepContext) -> None:
+        step = _none
+        for i in range(len(steps) - 1, -1, -1):
+            next_step: AsyncAnyCallable = step
+
+            async def _next(i: int = i, next_step: AsyncAnyCallable = next_step) -> None:
+                await steps[i](context, next_step)
 
             step = _next
 

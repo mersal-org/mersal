@@ -54,6 +54,6 @@ class InMemoryTransportPlugin(Plugin):
             lambda config: AsyncCallable(self._config.transport),
         ]
         plugin = LifespanHooksRegistrationPluginConfig(
-            on_startup_hooks=startup_hooks,  # type: ignore[arg-type]
+            on_startup_hooks=startup_hooks,
         ).plugin
         plugin(configurator)

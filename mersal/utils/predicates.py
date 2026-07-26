@@ -1,7 +1,7 @@
 from asyncio import iscoroutinefunction
 from collections.abc import Awaitable, Callable
 from functools import partial
-from typing import ParamSpec, TypeGuard, TypeVar
+from typing import ParamSpec, TypeGuard, TypeVar, cast
 
 __all__ = ("is_async_callable",)
 
@@ -21,7 +21,7 @@ def is_async_callable(value: Callable[P, T]) -> TypeGuard[Callable[P, Awaitable[
         Bool determining if type of ``value`` is an awaitable.
     """
     while isinstance(value, partial):
-        value = value.func
+        value = cast("Callable[P, T]", value.func)
 
     return iscoroutinefunction(value) or (
         callable(value) and iscoroutinefunction(value.__call__)  #  type: ignore[operator]

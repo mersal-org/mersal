@@ -69,5 +69,5 @@ def async_partial(fn: Callable) -> Callable:
         return await run_sync(applied_kwarg, *args)
 
     # this allows us to unwrap the partial later, so it's an important "hack".
-    wrapper.func = fn  # type: ignore[attr-defined]
+    wrapper.func = fn  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     return wrapper

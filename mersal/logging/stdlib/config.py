@@ -20,7 +20,7 @@ class StdlibLoggingConfig(LoggingConfig):
     root: dict[str, Any] = field(default_factory=dict)
     configure_root_logger: bool = field(default=True)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if "standard" not in self.formatters:
             self.formatters["standard"] = self._standard_formatter()
 

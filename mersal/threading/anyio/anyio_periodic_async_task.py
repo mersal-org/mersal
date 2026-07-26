@@ -32,7 +32,7 @@ class AnyIOPeriodicTask(PeriodicAsyncTask):
         task_group = anyio.create_task_group()
         await self._exit_stack.enter_async_context(task_group)
         self._cancel_scope = task_group.cancel_scope
-        task_group.start_soon(self._start)
+        _ = task_group.start_soon(self._start)
 
     async def stop(self) -> None:
         if self._cancel_scope:

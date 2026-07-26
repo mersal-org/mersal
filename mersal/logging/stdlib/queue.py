@@ -26,6 +26,7 @@ class QueueListenerHandler(QueueHandler):
         Args:
             handlers: Optional 'ConvertingList'
         """
-        super().__init__(Queue(-1))
+        queue: Queue[LogRecord] = Queue(-1)
+        super().__init__(queue)
         handlers = [handlers[i] for i in range(len(handlers))] if handlers else [StreamHandler()]
-        self.listener = LoggingQueueListener(self.queue, *handlers)  # type: ignore[arg-type]
+        self.listener = LoggingQueueListener(queue, *handlers)

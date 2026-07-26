@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from .anyio_worker import AnyioWorker
 
@@ -25,7 +25,8 @@ class AnyioWorkerFactory:
         self.pipeline_invoker = pipeline_invoker
         self.logger = logger
         self.max_parallelism = max_parallelism
-        self.app: Mersal = None  # type: ignore[assignment]
+        # Populated by Mersal.__init__ right after this factory is constructed.
+        self.app: Mersal = cast("Mersal", None)
 
     def create_worker(
         self,

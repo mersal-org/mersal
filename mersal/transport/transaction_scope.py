@@ -1,7 +1,6 @@
 import types
 from collections.abc import Callable
-
-from typing_extensions import Self
+from typing import Self
 
 from mersal.logging import Logger
 from mersal.logging.null_logger import NullLogger

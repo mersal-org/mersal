@@ -21,6 +21,8 @@ class StepContext:
         self._items_keys[key] = value
 
     def load(self, instance_type: type[T]) -> T:
+        # Actually returns None when instance_type was never saved; callers that may hit
+        # that case are expected to falsy-check the result despite the non-Optional type.
         return cast("T", self._items.get(instance_type))
 
     def load_keys(self, key: str) -> Any:

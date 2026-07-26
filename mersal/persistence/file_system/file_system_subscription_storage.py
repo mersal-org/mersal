@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-
-from typing_extensions import Self
+from typing import Self
 
 from mersal.subscription import SubscriptionStorage
 
@@ -13,9 +12,10 @@ __all__ = ("FileSystemSubscriptionStorage",)
 class FileSystemSubscriptionStorage(SubscriptionStorage):
     __slots__ = ["_base_directory", "_is_centralized"]
 
+    _base_directory: Path
+    _is_centralized: bool
+
     def __init__(self) -> None:
-        self._base_directory: Path = None  # type: ignore[assignment]
-        self._is_centralized: bool = None  # type: ignore[assignment]
         raise NotImplementedError()
 
     @classmethod

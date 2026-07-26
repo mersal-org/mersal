@@ -37,7 +37,7 @@ class IdempotencyCheckerStep(IncomingStep):
 
         await next_step()
 
-    def _handle_duplicate(self, message, invokers):
+    def _handle_duplicate(self, message: LogicalMessage, invokers: HandlerInvokers) -> None:
         if self.stop_invocation:
             for invoker in invokers:
                 invoker.should_invoke = False

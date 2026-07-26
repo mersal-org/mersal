@@ -1,10 +1,8 @@
 import logging
 import types
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from contextlib import AsyncExitStack
-from typing import TYPE_CHECKING, Any
-
-from typing_extensions import Self
+from typing import TYPE_CHECKING, Any, Self
 
 from mersal.activation import HandlerActivator
 from mersal.configuration.default_plugin import DefaultPlugin
@@ -184,8 +182,8 @@ class Mersal:
         if idempotency is not None:
             plugins.append(IdempotencyPlugin(idempotency))
 
-        if saga is not None and saga is not Empty:
-            plugins.append(SagaPlugin(saga))  # type: ignore[arg-type]
+        if isinstance(saga, SagaConfig):
+            plugins.append(SagaPlugin(saga))
         elif saga is not Empty:
             plugins.append(SagaPlugin(SagaConfig(storage=InMemorySagaStorage())))
 
@@ -227,7 +225,7 @@ class Mersal:
 
         self.configurator.resolve()
         self.router = self.configurator.get(Router)  # type: ignore[type-abstract]
-        self.logger: Logger = self.configurator.get(Logger)
+        self.logger: Logger = self.configurator.get(Logger)  # type: ignore[type-abstract]
         self.transport = self.configurator.get(Transport)  # type: ignore[type-abstract]
         self.worker_factory = self.configurator.get(WorkerFactory)  # type: ignore[type-abstract]
         self.worker_factory.app = self
@@ -275,7 +273,7 @@ class Mersal:
         logical_message = self._create_message(command_message, headers)
 
         if addresses:
-            _addresses = addresses
+            _addresses: Iterable[str] = addresses
         else:
             destination_address = await self.router.get_destination_address(logical_message)
             _addresses = [destination_address]
@@ -383,6 +381,6 @@ class Mersal:
 
     @debug.setter
     def debug(self, value: bool) -> None:
-        if self.logger and self.logging_config:
+        if self.logging_config:
             self.logging_config.set_level(self.logger, logging.DEBUG if value else logging.INFO)
         self._debug = value

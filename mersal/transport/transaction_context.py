@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Protocol
+import types
+from typing import TYPE_CHECKING, Any, Protocol, Self
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -12,6 +13,15 @@ __all__ = ("TransactionContext",)
 
 class TransactionContext(Protocol):
     items: dict[str | type, Any]
+
+    async def __aenter__(self) -> Self: ...
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: types.TracebackType | None,
+    ) -> None: ...
 
     def on_commit(self, action: AsyncTransactionContextCallable) -> None: ...
 

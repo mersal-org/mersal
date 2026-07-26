@@ -37,6 +37,7 @@ class TestBasicTransportFunctionalityForFileSystemTransport(BasicTransportTest):
 
     async def test_messages_are_persisted_as_json_files(self, transport_maker: TransportMaker):
         transport = transport_maker(input_queue_address="persist-test")
+        assert isinstance(transport, FileSystemTransport)
         message = TransportMessageBuilder.build()
 
         async with DefaultTransactionContext() as context:
@@ -50,6 +51,7 @@ class TestBasicTransportFunctionalityForFileSystemTransport(BasicTransportTest):
 
     async def test_message_file_removed_after_receive(self, transport_maker: TransportMaker):
         transport = transport_maker(input_queue_address="remove-test")
+        assert isinstance(transport, FileSystemTransport)
         message = TransportMessageBuilder.build()
 
         async with DefaultTransactionContext() as context:

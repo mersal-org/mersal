@@ -1,4 +1,5 @@
 from collections.abc import Iterable, Iterator, Sequence
+from typing import overload
 
 from mersal.outbox.outbox_message import OutboxMessage
 from mersal.types import AsyncAnyCallable
@@ -29,5 +30,9 @@ class OutboxMessageBatch(Sequence[OutboxMessage]):
     def __iter__(self) -> Iterator[OutboxMessage]:
         return iter(self._messages)
 
-    def __getitem__(self, index: int) -> OutboxMessage:  # type: ignore[override]
+    @overload
+    def __getitem__(self, index: int) -> OutboxMessage: ...
+    @overload
+    def __getitem__(self, index: slice) -> Sequence[OutboxMessage]: ...
+    def __getitem__(self, index: int | slice) -> OutboxMessage | Sequence[OutboxMessage]:
         return self._messages[index]

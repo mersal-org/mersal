@@ -51,10 +51,9 @@ class LoadSagaDataStep(IncomingStep):
         transaction_context = context.load(TransactionContext)  # type: ignore[type-abstract]
         message = handler_invokers.message
         message_type = type(message.body)
-        saga_invokers: Iterable[SagaHandlerInvoker] = filter(
-            lambda invoker: isinstance(invoker, SagaHandlerInvoker),
-            handler_invokers,
-        )
+        saga_invokers: list[SagaHandlerInvoker] = [
+            invoker for invoker in handler_invokers if isinstance(invoker, SagaHandlerInvoker)
+        ]
         loaded_sagas: list[SagasOperationWrapper] = []
         created_sagas: list[SagasOperationWrapper] = []
         for saga_invoker in saga_invokers:

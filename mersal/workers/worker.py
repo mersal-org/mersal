@@ -1,8 +1,6 @@
 import types
 from typing import Protocol
 
-from typing_extensions import Self
-
 __all__ = ("Worker",)
 
 
@@ -14,7 +12,9 @@ class Worker(Protocol):
 
     async def stop(self) -> None: ...
 
-    async def __aenter__(self) -> Self: ...
+    # `Self` here breaks ty's matching against `AbstractAsyncContextManager[Worker, ...]`
+    # in AsyncExitStack.enter_async_context (mersal/app.py), so this stays `Worker`.
+    async def __aenter__(self) -> "Worker": ...  # noqa: PYI034
 
     async def __aexit__(
         self,

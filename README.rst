@@ -31,6 +31,12 @@ Mersal
      - .. image:: https://img.shields.io/badge/license-MIT-202235.svg?logo=python&labelColor=202235&color=1e4b94&logoColor=white
           :target: https://spdx.org/licenses/
           :alt: License - MIT
+       .. image:: https://img.shields.io/badge/types-ty-202235.svg?logo=python&labelColor=202235&color=1e4b94&logoColor=white
+          :target: https://github.com/astral-sh/ty
+          :alt: types - ty
+       .. image:: https://img.shields.io/badge/types-Basedpyright-202235.svg?logo=python&labelColor=202235&color=1e4b94&logoColor=white
+          :target: https://github.com/DetachHead/basedpyright
+          :alt: types - Basedpyright
        .. image:: https://img.shields.io/badge/types-Mypy-202235.svg?logo=python&labelColor=202235&color=1e4b94&logoColor=white
           :target: https://github.com/python/mypy
           :alt: types - Mypy

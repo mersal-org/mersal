@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import types
-from typing import TYPE_CHECKING, Any
-
-from typing_extensions import Self
+from typing import TYPE_CHECKING, Any, Self
 
 from .transaction_context import TransactionContext
 

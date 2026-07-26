@@ -3,9 +3,7 @@ from __future__ import annotations
 import time
 import types
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any
-
-from typing_extensions import Self
+from typing import TYPE_CHECKING, Any, Self
 
 from mersal.logging.logger import Logger
 from mersal.messages import LogicalMessage, TransportMessage
@@ -50,7 +48,7 @@ def _step_name(step: Any) -> str:
 
 def _extract_incoming_context(context: IncomingStepContext) -> dict[str, Any]:
     transport_message = context.load(TransportMessage)
-    if not transport_message:
+    if not transport_message:  # type: ignore[truthy-bool]
         return {"message": "unknown", "pipeline": "incoming"}
     return {
         "pipeline": "incoming",
@@ -64,13 +62,13 @@ def _extract_outgoing_context(context: OutgoingStepContext) -> dict[str, Any]:
     logical_message = context.load(LogicalMessage)
     destinations = context.load(DestinationAddresses)
     result: dict[str, Any] = {"pipeline": "outgoing"}
-    if logical_message:
+    if logical_message:  # type: ignore[truthy-bool]
         result["message"] = logical_message.message_label
         result["message_id"] = str(logical_message.headers.message_id)
         result["message_type"] = logical_message.headers.message_type or logical_message.message_label
     else:
         result["message"] = "unknown"
-    result["destinations"] = ",".join(destinations) if destinations else "unknown"
+    result["destinations"] = ",".join(destinations) if destinations else "unknown"  # type: ignore[truthy-bool]
     return result
 
 
@@ -85,7 +83,7 @@ class _LoggingIncomingStep:
     async def __call__(self, context: IncomingStepContext, next_step: AsyncAnyCallable) -> None:
         step_name = _step_name(self._step)
         transport_message = context.load(TransportMessage)
-        message_label = transport_message.message_label if transport_message else "unknown"
+        message_label = transport_message.message_label if transport_message else "unknown"  # type: ignore[truthy-bool]
 
         logger = self._logger.bind(step=step_name, message=message_label, pipeline="incoming")
 
@@ -113,10 +111,10 @@ class _LoggingOutgoingStep:
     async def __call__(self, context: OutgoingStepContext, next_step: AsyncAnyCallable) -> None:
         step_name = _step_name(self._step)
         logical_message = context.load(LogicalMessage)
-        message_label = logical_message.message_label if logical_message else "unknown"
+        message_label = logical_message.message_label if logical_message else "unknown"  # type: ignore[truthy-bool]
 
         destinations = context.load(DestinationAddresses)
-        dest_str = ",".join(destinations) if destinations else "unknown"
+        dest_str = ",".join(destinations) if destinations else "unknown"  # type: ignore[truthy-bool]
 
         logger = self._logger.bind(step=step_name, message=message_label, destinations=dest_str, pipeline="outgoing")
 
@@ -302,23 +300,23 @@ class StandardLoggingPlugin(Plugin):
 
         def decorate_incoming_pipeline(configurator: StandardConfigurator) -> _LoggingIncomingPipeline:
             pipeline = configurator.get(IncomingPipeline)  # type: ignore[type-abstract]
-            return _LoggingIncomingPipeline(pipeline, configurator.get(Logger))
+            return _LoggingIncomingPipeline(pipeline, configurator.get(Logger))  # type: ignore[type-abstract]
 
         def decorate_outgoing_pipeline(configurator: StandardConfigurator) -> _LoggingOutgoingPipeline:
             pipeline = configurator.get(OutgoingPipeline)  # type: ignore[type-abstract]
-            return _LoggingOutgoingPipeline(pipeline, configurator.get(Logger))
+            return _LoggingOutgoingPipeline(pipeline, configurator.get(Logger))  # type: ignore[type-abstract]
 
         def decorate_pipeline_invoker(configurator: StandardConfigurator) -> _LoggingPipelineInvoker:
             invoker = configurator.get(PipelineInvoker)  # type: ignore[type-abstract]
-            return _LoggingPipelineInvoker(invoker, configurator.get(Logger), pipeline_context)
+            return _LoggingPipelineInvoker(invoker, configurator.get(Logger), pipeline_context)  # type: ignore[type-abstract]
 
         def decorate_error_handler(configurator: StandardConfigurator) -> _LoggingErrorHandler:
             handler = configurator.get(ErrorHandler)  # type: ignore[type-abstract]
-            return _LoggingErrorHandler(handler, configurator.get(Logger))
+            return _LoggingErrorHandler(handler, configurator.get(Logger))  # type: ignore[type-abstract]
 
         def decorate_worker_factory(configurator: StandardConfigurator) -> _LoggingWorkerFactory:
             factory = configurator.get(WorkerFactory)  # type: ignore[type-abstract]
-            return _LoggingWorkerFactory(factory, configurator.get(Logger))
+            return _LoggingWorkerFactory(factory, configurator.get(Logger))  # type: ignore[type-abstract]
 
         configurator.decorate(IncomingPipeline, decorate_incoming_pipeline)
         configurator.decorate(OutgoingPipeline, decorate_outgoing_pipeline)

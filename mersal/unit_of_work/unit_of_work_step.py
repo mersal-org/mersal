@@ -10,7 +10,8 @@ from mersal.utils.sync import AsyncCallable
 if TYPE_CHECKING:
     from collections.abc import Awaitable
 
-    from mersal.types.callable_types import AsyncAnyCallable, AsyncTransactionContextCallable
+    from mersal.transport.transaction_context import TransactionContext
+    from mersal.types.callable_types import AsyncAnyCallable
     from mersal.unit_of_work.config import (
         UnitOfWorkConfig,
     )
@@ -54,10 +55,10 @@ class UnitOfWorkStep(IncomingStep):
             await close_action()
         else:
 
-            async def _action(_: AsyncTransactionContextCallable) -> None:
+            async def _action(_: TransactionContext) -> None:
                 await commit_action()
 
-            async def _close_action(_: AsyncTransactionContextCallable) -> None:
+            async def _close_action(_: TransactionContext) -> None:
                 await close_action()
 
             transaction_context.on_commit(_action)
@@ -77,10 +78,10 @@ class UnitOfWorkStep(IncomingStep):
             await close_action()
         else:
 
-            async def _action(_: AsyncTransactionContextCallable) -> None:
+            async def _action(_: TransactionContext) -> None:
                 await rollback_action()
 
-            async def _close_action(_: AsyncTransactionContextCallable) -> None:
+            async def _close_action(_: TransactionContext) -> None:
                 await close_action()
 
             transaction_context.on_rollback(_action)

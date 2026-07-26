@@ -45,7 +45,7 @@ class OutboxPlugin(Plugin):
             return pipeline
 
         def register_forwarder(configurator: StandardConfigurator) -> OutboxForwarder:
-            logger = configurator.get(Logger)
+            logger = configurator.get(Logger)  # type: ignore[type-abstract]
             return OutboxForwarder(
                 AnyIOPeriodicTaskFactory(logger=logger),
                 configurator.get(Transport),  # type: ignore[type-abstract]
@@ -74,7 +74,7 @@ class OutboxPlugin(Plugin):
         ]
 
         plugin = LifespanHooksRegistrationPluginConfig(
-            on_startup_hooks=startup_hooks,  # type: ignore[arg-type]
-            on_shutdown_hooks=shutdown_hooks,  # type: ignore[arg-type]
+            on_startup_hooks=startup_hooks,
+            on_shutdown_hooks=shutdown_hooks,
         ).plugin
         plugin(configurator)

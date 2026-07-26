@@ -1,9 +1,7 @@
 import typing
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
-from typing import Any, Generic, Protocol, runtime_checkable
-
-from typing_extensions import Self
+from typing import Any, Generic, Protocol, Self, cast, runtime_checkable
 
 from mersal.sagas.correlation_property import CorrelationProperty
 from mersal.sagas.correlator import Correlator
@@ -38,7 +36,8 @@ class SagaBase(Saga, Generic[SagaDataT], metaclass=ABCMeta):
     initiating_message_types: typing.ClassVar[set[type]]
 
     def __init__(self) -> None:
-        self.data: SagaData[SagaDataT] = None  # type: ignore[assignment]
+        # Populated by LoadSagaDataStep before any other saga method is invoked.
+        self.data: SagaData[SagaDataT] = cast("SagaData[SagaDataT]", None)
         self.correlator = Correlator(self.data_type)
         self.is_completed = False
         self.is_unchanged = False
@@ -46,7 +45,7 @@ class SagaBase(Saga, Generic[SagaDataT], metaclass=ABCMeta):
     def __class_getitem__(cls, annotation: Any) -> type[Self]:
         cls_dict: dict[str, Any] = {"data_type": annotation}
 
-        return type(f"{cls.__name__}[{annotation}]", (cls,), cls_dict)  # type: ignore[return-value]
+        return cast("type[Self]", type(f"{cls.__name__}[{annotation}]", (cls,), cls_dict))
 
     @abstractmethod
     def correlate_messages(self, correlator: Correlator) -> None: ...

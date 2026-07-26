@@ -12,7 +12,7 @@ Mersal uses `uv <https://docs.astral.sh/uv/>`_ for dependency management and
    mise run install    # create the venv, install deps, install pre-commit hooks
    mise run test        # run the test suite
    mise run lint        # format + run pre-commit
-   mise run type-check   # mypy + basedpyright
+   mise run type-check   # ty + basedpyright + mypy
    mise run docs:serve   # live-reloading docs server
 
 Run ``mise tasks`` to see everything available.

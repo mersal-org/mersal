@@ -3,9 +3,10 @@ import typing
 import uuid
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from typing import Self
 
 import pytest
-from typing_extensions import Self, override
+from typing_extensions import override
 
 from mersal.messages import LogicalMessage
 from mersal.persistence.in_memory import (

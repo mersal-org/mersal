@@ -19,10 +19,9 @@ class DefaultRouter(Router):
         self._destination_addresses: dict[type, str] = {}
 
     def register(self, message_type: type | Iterable[type], destination_address: str) -> None:
-        if not isinstance(message_type, Iterable):
-            message_type = [message_type]
+        message_types = [message_type] if isinstance(message_type, type) else message_type
 
-        for m in message_type:
+        for m in message_types:
             self._destination_addresses[m] = destination_address
 
     async def get_destination_address(self, message: LogicalMessage) -> str:

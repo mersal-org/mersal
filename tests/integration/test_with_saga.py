@@ -3,9 +3,9 @@ import uuid
 from asyncio import sleep
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Self
 
 import pytest
-from typing_extensions import Self
 
 from mersal.activation import BuiltinHandlerActivator
 from mersal.app import Mersal

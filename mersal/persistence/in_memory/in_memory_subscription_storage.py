@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import MutableSet
-from typing import Any
-
-from typing_extensions import Self
+from typing import Any, Self
 
 from mersal.subscription import SubscriptionStorage
 
@@ -25,9 +23,10 @@ class InMemorySubscriptionStorage(SubscriptionStorage):
 
     __slots__ = ["_is_centralized", "_subscribers"]
 
+    _is_centralized: bool
+    _subscribers: InMemorySubscriptionStore
+
     def __init__(self) -> None:
-        self._is_centralized: bool = None  # type: ignore[assignment]
-        self._subscribers: InMemorySubscriptionStore = None  # type: ignore[assignment]
         raise NotImplementedError()
 
     @classmethod
