@@ -880,14 +880,14 @@ requires-dist = [{ name = "anyio", specifier = ">=4.8.0" }]
 [package.metadata.requires-dev]
 dev = [
     { name = "anyio" },
-    { name = "basedpyright", specifier = ">=1.28.1" },
+    { name = "basedpyright" },
     { name = "furo" },
     { name = "mersal" },
     { name = "mersal-litestar" },
     { name = "mersal-msgspec" },
     { name = "mersal-polling" },
     { name = "mersal-sqlalchemy" },
-    { name = "mypy", specifier = ">=1.15.0" },
+    { name = "mypy" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -903,7 +903,7 @@ dev = [
     { name = "sphinxcontrib-mermaid" },
     { name = "sqlalchemy" },
     { name = "time-machine" },
-    { name = "ty", specifier = ">=0.0.63" },
+    { name = "ty" },
 ]
 docs = [
     { name = "furo" },
@@ -923,11 +923,11 @@ docs = [
     { name = "sqlalchemy" },
 ]
 linting = [
-    { name = "basedpyright", specifier = ">=1.28.1" },
-    { name = "mypy", specifier = ">=1.15.0" },
+    { name = "basedpyright" },
+    { name = "mypy" },
     { name = "pre-commit" },
     { name = "ruff" },
-    { name = "ty", specifier = ">=0.0.63" },
+    { name = "ty" },
 ]
 test = [
     { name = "anyio" },

@@ -63,11 +63,11 @@ docs = [
     'mersal_litestar',
 ]
 linting = [
-    "basedpyright>=1.28.1",
-    "mypy>=1.15.0",
+    "basedpyright",
+    "mypy",
     "pre-commit",
     "ruff",
-    "ty>=0.0.63",
+    "ty",
 ]
 test = [
     "pytest",
