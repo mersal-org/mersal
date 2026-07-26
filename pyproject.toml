@@ -166,6 +166,9 @@ allow-direct-references = true
 dev-mode-dirs = ["."]
 exclude = ["/.github", "/docs"]
 
+[tool.check-wheel-contents]
+toplevel = ["mersal", "mersal_testing"]
+
 # Type checking configuration
 [tool.mypy]
 python_version = "3.11"
