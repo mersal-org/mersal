@@ -21,9 +21,14 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "sphinx.ext.autosectionlabel",
+    "sphinx.ext.viewcode",
     "sphinx_copybutton",
     "sphinxcontrib.bibtex",
+    "sphinxcontrib.mermaid",
     "sphinx_design",
+    "sphinx_paramlinks",
+    "sphinx_togglebutton",
 ]
 
 templates_path = ["_templates"]
@@ -51,9 +56,45 @@ autodoc_default_options = {
 }
 autodoc_typehints_format = "short"
 
-auto_pytabs_min_version = (3, 10)
-auto_pytabs_max_version = (3, 13)
-auto_pytabs_compat_mode = True
+autosectionlabel_prefix_document = True
+
+nitpicky = True
+nitpick_ignore: list[tuple[str, str]] = [
+    # TypeVars and TypeAliases - never resolvable as py:class targets
+    ("py:class", "MessageT"),
+    ("py:class", "MessageHandler"),
+    ("py:class", "HandlerFactory"),
+    ("py:class", "mersal.unit_of_work.config.UnitOfWorkT"),
+    # autodoc_typehints_format="short" renders annotations without a module
+    # prefix, which nitpicky can't resolve without a `py:module` context
+    ("py:class", "InMemoryNetwork"),
+    ("py:class", "AsyncSession"),
+    ("py:class", "async_sessionmaker"),
+    # TODO: no reference/*.rst page documents these modules yet
+    ("py:class", "mersal.transport.file_system.FileSystemTransport"),
+    ("py:class", "mersal.transport.base_transport.BaseTransport"),
+    ("py:class", "mersal.pipeline.pipeline_invoker.PipelineInvoker"),
+    ("py:class", "mersal.pipeline.message_context.MessageContext"),
+    ("py:class", "pipeline.MessageContext"),
+    ("py:class", "mersal.pipeline.send.set_default_headers_step.MessageIdGenerator"),
+    ("py:class", "mersal.routing.router.Router"),
+    ("py:class", "mersal.routing.default.config.DefaultRouterRegistrationConfig"),
+    ("py:class", "mersal.workers.worker_factory.WorkerFactory"),
+    ("py:class", "mersal.retry.RetryStrategySettings"),
+    ("py:class", "mersal.retry.retry_strategy_settings.RetryStrategySettings"),
+    ("py:class", "mersal.retry.error_tracking.error_tracker.ErrorTracker"),
+    ("py:class", "mersal.retry.error_handling.error_handler.ErrorHandler"),
+    ("py:class", "mersal.retry.fail_fast.fail_fast_checker.FailFastChecker"),
+    ("py:class", "mersal.plugins.plugin.Plugin"),
+    ("py:class", "mersal.sagas.config.SagaConfig"),
+    ("py:class", "mersal.sagas.saga_storage.SagaStorage"),
+    ("py:class", "mersal.serialization.serializers.Serializer"),
+    ("py:class", "mersal.logging.config.LoggingConfig"),
+    ("py:class", "mersal.logging.logger.Logger"),
+    ("py:class", "mersal.messages.message_headers.MessageHeaders"),
+    ("py:class", "mersal.messages.transport_message.TransportMessage"),
+    ("py:class", "mersal.types.Empty"),
+]
 
 bibtex_bibfiles = ["refs.bib"]
 # -- Options for HTML output -------------------------------------------------

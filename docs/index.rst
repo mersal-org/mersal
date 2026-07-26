@@ -17,6 +17,7 @@ Welcome to Mersal's documentation!
    :caption: Documentation
    :hidden:
 
+   quickstart
    usage/index
    glossary
    reference/index

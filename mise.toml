@@ -225,7 +225,7 @@ depends = ["docs:clean"]
 run = [
 '''
 echo "{{vars.INFO}} Starting documentation server... 📚"
-uv run sphinx-autobuild docs docs/_build/ -j auto --watch core --watch packages --watch docs --watch CONTRIBUTING.rst --port 8002
+uv run sphinx-autobuild docs docs/_build/ -j auto --watch mersal --watch docs --watch CONTRIBUTING.rst --port 8002
 '''
 ]
 
