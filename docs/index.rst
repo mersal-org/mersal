@@ -18,7 +18,9 @@ Welcome to Mersal's documentation!
    :hidden:
 
    quickstart
+   example_theme
    usage/index
+   tutorials/index
    glossary
    reference/index
 
