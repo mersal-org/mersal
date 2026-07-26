@@ -1,11 +1,13 @@
 import json
 import uuid
 
+import anyio.lowlevel
 import pytest
 from anyio import sleep
 
 from mersal.activation import BuiltinHandlerActivator
 from mersal.app import Mersal
+from mersal.exceptions import MersalExceptionError
 from mersal.logging.stdlib.logger import StdlibLogger
 from mersal.messages.message_headers import MessageHeaders
 from mersal.messages.transport_message import TransportMessage
@@ -52,7 +54,7 @@ class ThrowingStep(IncomingStep):
     async def __call__(self, context: IncomingStepContext, next_step: AsyncAnyCallable):
         transaction_context: TransactionContext = context.load(TransactionContext)
         transaction_context.set_result(False, False)
-        raise Exception()
+        raise MersalExceptionError()
 
 
 class HappyStep(IncomingStep):
@@ -104,12 +106,12 @@ class TestAnyioWorker:
         subject = factory.create_worker(worker_name)
 
         def throw():
-            raise Exception()
+            raise MersalExceptionError()
 
         subject._receive_message = throw
 
         async with subject:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert caplog.text
 
@@ -124,12 +126,12 @@ class TestAnyioWorker:
         subject = factory.create_worker(worker_name)
 
         async def transport_throw(_):
-            raise Exception()
+            raise MersalExceptionError()
 
         transport.receive = transport_throw  # pyright: ignore[reportAttributeAccessIssue]
 
         async with subject:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert caplog.text
 
@@ -158,7 +160,7 @@ class TestAnyioWorker:
         subject = factory.create_worker(worker_name)
 
         async with subject:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert called
 
@@ -182,7 +184,7 @@ class TestAnyioWorker:
         subject: AnyioWorker = app.worker  # type: ignore
 
         async with subject:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert transport_decorator
         assert isinstance(transport_decorator._receive[0], DefaultTransactionContextWithOwningApp)
@@ -204,7 +206,7 @@ class TestAnyioWorker:
 
         network.deliver(queue_address, TransportMessageBuilder.build())
         async with subject:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert caplog.text
 
@@ -220,7 +222,7 @@ class TestAnyioWorker:
 
         network.deliver(queue_address, TransportMessageBuilder.build())
         async with subject:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert caplog.text
 
@@ -240,7 +242,7 @@ class TestAnyioWorker:
 
         network.deliver(queue_address, TransportMessageBuilder.build())
         async with subject:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert not network.get_next(queue_address)
 

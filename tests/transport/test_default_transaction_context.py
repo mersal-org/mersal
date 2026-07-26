@@ -3,6 +3,7 @@ from functools import partial
 
 import pytest
 
+from mersal.exceptions import MersalExceptionError
 from mersal.transport import DefaultTransactionContext, TransactionContext
 from mersal.transport.default_transaction_context import (
     InvalidTransactioContextStateError,
@@ -49,7 +50,7 @@ def default_subject_actions():
 def action_maker_with_failure(events: list[str], event: str, should_raise: bool = False):
     async def action(_: TransactionContext):
         if should_raise:
-            raise Exception(f"Failed for {event}")
+            raise MersalExceptionError(f"Failed for {event}")
 
         events.append(event)
 
@@ -117,7 +118,7 @@ class TestDefaultTransactionContext:
         subject.set_result(commit=True, ack=True)
 
         async with subject:
-            with pytest.raises(Exception):
+            with pytest.raises(MersalExceptionError):
                 await subject.complete()
 
         assert events == ["nack", "close"]
@@ -137,7 +138,7 @@ class TestDefaultTransactionContext:
         subject.set_result(commit=False, ack=True)
 
         async with subject:
-            with pytest.raises(Exception):
+            with pytest.raises(MersalExceptionError):
                 await subject.complete()
 
         assert events == ["nack", "close"]
@@ -164,7 +165,7 @@ class TestDefaultTransactionContext:
 
         subject.on_error(on_error_callback)
         async with subject:
-            with pytest.raises(Exception):
+            with pytest.raises(MersalExceptionError):
                 await subject.complete()
         assert events == ["close"]
         assert on_error_callback.call_count == 1
@@ -189,7 +190,7 @@ class TestDefaultTransactionContext:
 
         subject.on_error(on_error_callback)
         async with subject:
-            with pytest.raises(Exception):
+            with pytest.raises(MersalExceptionError):
                 await subject.complete()
         assert events == ["commit", "close"]
 

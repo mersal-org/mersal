@@ -1,5 +1,6 @@
 import uuid
 
+import anyio.lowlevel
 import pytest
 from anyio import sleep
 
@@ -95,7 +96,7 @@ class TestBasicSendAndReceiveIntegration:
         app = Mersal("m1", activator, plugins=plugins)
         await app.send_local(message, {})
         async with app:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert not app.worker._running  # pyright: ignore[reportAttributeAccessIssue]
         assert message.internal == [1, 1]
@@ -112,7 +113,7 @@ class TestBasicSendAndReceiveIntegration:
         app = Mersal("m1", activator, plugins=plugins)
         await app.send_local(message, {})
         async with app:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert message.internal == [1]
 
@@ -140,7 +141,7 @@ class TestBasicSendAndReceiveIntegration:
         app2 = Mersal("m2", activator, plugins=plugins2)
         await app1.send(message2, {})
         async with app2:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert message2.internal == [1]
 
@@ -172,7 +173,7 @@ class TestBasicSendAndReceiveIntegration:
             },
         )
         async with app2:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert message2.internal == [1]
 

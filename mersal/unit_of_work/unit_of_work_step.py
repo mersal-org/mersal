@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from mersal.exceptions import MersalExceptionError
 from mersal.pipeline import IncomingStepContext, MessageContext
 from mersal.pipeline.incoming_step import IncomingStep
 from mersal.utils.sync import AsyncCallable
@@ -28,7 +29,7 @@ class UnitOfWorkStep(IncomingStep):
     async def __call__(self, context: IncomingStepContext, next_step: AsyncAnyCallable) -> None:
         message_context = MessageContext.current()
         if not message_context:
-            raise Exception("Not inside a transaction")
+            raise MersalExceptionError("Not inside a transaction")
 
         uow = await AsyncCallable(self._uow_factory)(message_context)
         message_context.transaction_context.items["uow"] = uow

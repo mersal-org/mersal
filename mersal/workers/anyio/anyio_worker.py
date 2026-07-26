@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import types
 from contextlib import AsyncExitStack
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import anyio
-from anyio import CancelScope, sleep
+import anyio.lowlevel
+from anyio import CancelScope
+from typing_extensions import Self
 
 from mersal.pipeline import IncomingStepContext, PipelineInvoker
 from mersal.transport import (
@@ -51,7 +54,7 @@ class AnyioWorker:
         if self._exit_stack:
             await self._exit_stack.aclose()
 
-    async def __aenter__(self) -> AnyioWorker:
+    async def __aenter__(self) -> Self:
         self._exit_stack = AsyncExitStack()
         self._parallelism_limiter = anyio.Semaphore(self._max_parallelism)
         self._processing_tg = anyio.create_task_group()
@@ -64,7 +67,7 @@ class AnyioWorker:
         self,
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
-        exc_tb: Any | None,
+        exc_tb: types.TracebackType | None,
     ) -> None:
         await self._stop()
         self._exit_stack = None
@@ -83,7 +86,7 @@ class AnyioWorker:
                 await self._receive_message()
             except Exception:
                 self.logger.exception("worker.receive.error", worker=self.name)
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
     async def _receive_message(self) -> None:
         await self._parallelism_limiter.acquire()

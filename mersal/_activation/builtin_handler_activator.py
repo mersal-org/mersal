@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import TYPE_CHECKING, TypeVar, cast
 
+from mersal.exceptions import MersalExceptionError
 from mersal.pipeline import MessageContext
 
 if TYPE_CHECKING:
@@ -51,7 +52,7 @@ class BuiltinHandlerActivator:
         """
         message_context = MessageContext.current()
         if not message_context:
-            raise Exception(
+            raise MersalExceptionError(
                 "BuiltinHandlerActivator get_handlers called outside of a transaction.",
             )
 

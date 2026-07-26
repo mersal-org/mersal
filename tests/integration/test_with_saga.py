@@ -1,3 +1,4 @@
+import typing
 import uuid
 from asyncio import sleep
 from collections.abc import Callable
@@ -50,7 +51,7 @@ class MySagaData:
 
 
 class MySaga(SagaBase[MySagaData]):
-    initiating_message_types = {
+    initiating_message_types: typing.ClassVar = {
         Message1,
     }
 

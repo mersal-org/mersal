@@ -1,5 +1,6 @@
 import uuid
 
+from mersal.exceptions import MersalExceptionError
 from mersal.idempotency import MessageTracker
 from mersal.transport import TransactionContext
 
@@ -14,7 +15,7 @@ class InMemoryMessageTracker(MessageTracker):
 
     async def track_message(self, message_id: uuid.UUID, transaction_context: TransactionContext) -> None:
         if message_id in self._tracked_messages:
-            raise Exception("Message already tracked")
+            raise MersalExceptionError("Message already tracked")
         self._tracked_messages.add(message_id)
 
     async def is_message_tracked(self, message_id: uuid.UUID, transaction_context: TransactionContext) -> bool:

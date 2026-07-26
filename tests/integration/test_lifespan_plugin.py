@@ -1,3 +1,4 @@
+import anyio.lowlevel
 import pytest
 from anyio import sleep
 
@@ -79,7 +80,7 @@ class TestLifespanPlugin:
 
         await app.send_local(message, {})
         async with app:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert on_startup_call_count == 2
         assert on_shutdown_call_count == 2

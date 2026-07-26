@@ -41,7 +41,7 @@ class OutboxStorageTestDouble(OutboxStorage):
                 message = messages.pop(0)
                 outbox_messages.append(
                     OutboxMessage(
-                        outbox_message_id=randint(1, 100000),  # noqa: S311
+                        outbox_message_id=randint(1, 100000),
                         destination_address=message.destination_address,
                         headers=message.transport_message.headers,
                         body=message.transport_message.body,

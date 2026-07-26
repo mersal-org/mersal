@@ -1,5 +1,6 @@
 import pytest
 from anyio import sleep
+
 from mersal_docs.outbox.outbox_sqlalchemy_example import (
     PROMOTED_USERS,
     AddUser,

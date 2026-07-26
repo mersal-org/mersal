@@ -17,6 +17,10 @@ class Counter:
         self.total += 1
 
 
+class FailingCountError(Exception):
+    """Just an exception."""
+
+
 class FailingCounter:
     def __init__(self, fail_at_call: list[int]) -> None:
         self.calls = 0
@@ -26,7 +30,7 @@ class FailingCounter:
     async def task(self) -> None:
         self.calls += 1
         if self.calls in self.fail_at_call:
-            raise Exception()
+            raise FailingCountError()
 
         self.total += 1
 

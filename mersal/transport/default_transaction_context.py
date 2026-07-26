@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import types
 from typing import TYPE_CHECKING, Any
+
+from typing_extensions import Self
 
 from .transaction_context import TransactionContext
 
@@ -29,10 +32,15 @@ class DefaultTransactionContext(TransactionContext):
         self._completed: bool = False
         self._closed: bool = False
 
-    async def __aenter__(self) -> DefaultTransactionContext:
+    async def __aenter__(self) -> Self:
         return self
 
-    async def __aexit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: types.TracebackType | None,
+    ) -> None:
         await self.close()
 
     def on_commit(self, action: AsyncTransactionContextCallable) -> None:
@@ -66,8 +74,6 @@ class DefaultTransactionContext(TransactionContext):
         try:
             await self._try_to_commit_or_rollback()
             await self._ack_or_nack()
-        except:
-            raise
         finally:
             self._completed = True
 

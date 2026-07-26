@@ -1,3 +1,4 @@
+from mersal.exceptions import MersalExceptionError
 from mersal.messages import LogicalMessage
 from mersal.pipeline.incoming_step import IncomingStep
 from mersal.pipeline.incoming_step_context import IncomingStepContext
@@ -13,7 +14,7 @@ class DispatchIncomingMessageStep(IncomingStep):
         logical_message = context.load(LogicalMessage)
         message = logical_message.body
         if not invokers:
-            raise Exception(
+            raise MersalExceptionError(
                 f"Message {type(message)}/{logical_message.message_label} was not dispatched to any handlers"
             )
 

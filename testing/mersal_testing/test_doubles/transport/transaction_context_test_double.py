@@ -1,5 +1,6 @@
 from typing import Any, cast
 
+from mersal.exceptions import MersalExceptionError
 from mersal.types import AsyncTransactionContextCallable
 
 __all__ = ("TransactionContextTestDouble",)
@@ -43,7 +44,7 @@ class TransactionContextTestDouble:
     async def close(self) -> None:
         self._close_calls += 1
         if self._close_calls in self._close_exceptions_on_calls:
-            raise Exception()
+            raise MersalExceptionError()
 
     def raise_exception_on_close_calls(self, calls: list[int]) -> None:
         self._close_exceptions_on_calls = calls

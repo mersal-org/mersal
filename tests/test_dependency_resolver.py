@@ -1,4 +1,3 @@
-# ruff: noqa: N801
 from mersal.configuration.dependency_resolver import DependencyResolver
 
 __all__ = (

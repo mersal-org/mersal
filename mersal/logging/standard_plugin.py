@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import time
+import types
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
+
+from typing_extensions import Self
 
 from mersal.logging.logger import Logger
 from mersal.messages import LogicalMessage, TransportMessage
@@ -250,7 +253,7 @@ class _LoggingWorker:
         self._logger.info("worker.stop")
         await self._worker.stop()
 
-    async def __aenter__(self) -> _LoggingWorker:
+    async def __aenter__(self) -> Self:
         self._logger.info("worker.start")
         await self._worker.__aenter__()
         return self
@@ -259,7 +262,7 @@ class _LoggingWorker:
         self,
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
-        exc_tb: Any | None,
+        exc_tb: types.TracebackType | None,
     ) -> None:
         await self._worker.__aexit__(exc_type, exc_val, exc_tb)
         self._logger.info("worker.stopped")

@@ -1,4 +1,5 @@
 import logging
+import types
 from collections.abc import Mapping, Sequence
 from contextlib import AsyncExitStack
 from typing import TYPE_CHECKING, Any
@@ -66,7 +67,7 @@ __all__ = ("Mersal",)
 
 
 class Mersal:
-    def __init__(  # noqa: C901
+    def __init__(
         self,
         name: str,
         handler_activator: HandlerActivator,
@@ -260,7 +261,7 @@ class Mersal:
         self,
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
-        exc_tb: Any | None,
+        exc_tb: types.TracebackType | None,
     ) -> None:
         await self.stop()
 

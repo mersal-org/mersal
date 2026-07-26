@@ -20,7 +20,7 @@ class InMemoryOutboxStorage(OutboxStorage):
         transaction_context: TransactionContext,
     ) -> None:
         for message in outgoing_messages:
-            _id = randint(1, 1000000)  # noqa: S311
+            _id = randint(1, 1000000)
             self._store[_id] = OutboxMessage(
                 outbox_message_id=_id,
                 destination_address=message.destination_address,

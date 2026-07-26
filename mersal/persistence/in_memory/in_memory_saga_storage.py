@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
+from mersal.exceptions import MersalExceptionError
 from mersal.exceptions.base_exceptions import ConcurrencyExceptionError
 from mersal.sagas.saga_storage import SagaStorage
 
@@ -43,11 +44,11 @@ class InMemorySagaStorage(SagaStorage):
         transaction_context: TransactionContext,
     ) -> None:
         if self._store.get(saga_data.id):
-            raise Exception("SagaData already exist")
+            raise MersalExceptionError("SagaData already exist")
 
         self._verify_correlation_properties_uniqueness(saga_data, correlation_properties)
         if saga_data.revision != 0:
-            raise Exception("Inserted data must have revision=0")
+            raise MersalExceptionError("Inserted data must have revision=0")
 
         self._store[saga_data.id] = deepcopy(saga_data)
 
@@ -60,7 +61,7 @@ class InMemorySagaStorage(SagaStorage):
         self._verify_correlation_properties_uniqueness(saga_data, correlation_properties)
         current_saga_data = self._store.get(saga_data.id)
         if not current_saga_data:
-            raise Exception("Saga couldn't be found")
+            raise MersalExceptionError("Saga couldn't be found")
 
         if not current_saga_data.revision == saga_data.revision:
             raise ConcurrencyExceptionError("Concurrency issues, different revisios")
@@ -95,4 +96,4 @@ class InMemorySagaStorage(SagaStorage):
                     existing_value = getattr(existing_saga_data.data, property_name)
 
                     if existing_value == new_value:
-                        raise Exception("Correlation properties are not unique!")
+                        raise MersalExceptionError("Correlation properties are not unique!")

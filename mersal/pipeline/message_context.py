@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from mersal.exceptions import MersalExceptionError
 from mersal.messages import LogicalMessage, MessageHeaders
 from mersal.transport.ambient_context import AmbientContext
 
@@ -23,7 +24,7 @@ class MessageContext:
             "IncomingStepContext | None", self.transaction_context.items.get(IncomingStepContext.step_context_key)
         )
         if not step:
-            raise Exception("IncomingStepContext is not part of the TransactionContext")
+            raise MersalExceptionError("IncomingStepContext is not part of the TransactionContext")
 
         return step
 
@@ -43,6 +44,6 @@ class MessageContext:
 
         step = transaction_context.items.get(IncomingStepContext.step_context_key)
         if not step:
-            raise Exception("IncomingStepContext is not part of the TransactionContext")
+            raise MersalExceptionError("IncomingStepContext is not part of the TransactionContext")
 
         return MessageContext(transaction_context)

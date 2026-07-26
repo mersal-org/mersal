@@ -1,10 +1,12 @@
 import uuid
 
+import anyio.lowlevel
 import pytest
 from anyio import sleep
 
 from mersal.activation import BuiltinHandlerActivator
 from mersal.app import Mersal
+from mersal.exceptions import MersalExceptionError
 from mersal.transport.in_memory import InMemoryNetwork
 from mersal.transport.in_memory.in_memory_transport_plugin import (
     InMemoryTransportPluginConfig,
@@ -41,7 +43,7 @@ class DummyMessageHandler:
             await sleep(self.delay)
 
         if self.should_throw:
-            raise Exception()
+            raise MersalExceptionError()
         message.internal.append(1)
 
 
@@ -89,7 +91,7 @@ class TestUnitOfWorkIntegration:
 
         await app.send_local(message, {})
         async with app:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert uow_helper.rollbacked == 1
         assert uow_helper.committed == 0
@@ -108,7 +110,7 @@ class TestUnitOfWorkIntegration:
         app = Mersal("m1", activator, plugins=plugins)
         await app.send_local(message, {})
         async with app:
-            await sleep(0)
+            await anyio.lowlevel.checkpoint()
 
         assert uow_helper.rollbacked == 0
         assert uow_helper.committed == 1

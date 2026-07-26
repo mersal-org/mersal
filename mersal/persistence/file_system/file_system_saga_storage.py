@@ -7,6 +7,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from mersal.exceptions import MersalExceptionError
 from mersal.exceptions.base_exceptions import ConcurrencyExceptionError
 from mersal.sagas.saga_data import SagaData
 from mersal.sagas.saga_storage import SagaStorage
@@ -55,11 +56,11 @@ class FileSystemSagaStorage(SagaStorage):
     ) -> None:
         path = self._saga_path(saga_data.id)
         if path.exists():
-            raise Exception("SagaData already exist")
+            raise MersalExceptionError("SagaData already exist")
 
         self._verify_correlation_properties_uniqueness(saga_data, correlation_properties)
         if saga_data.revision != 0:
-            raise Exception("Inserted data must have revision=0")
+            raise MersalExceptionError("Inserted data must have revision=0")
 
         self._write_saga(path, deepcopy(saga_data))
 
@@ -72,7 +73,7 @@ class FileSystemSagaStorage(SagaStorage):
         self._verify_correlation_properties_uniqueness(saga_data, correlation_properties)
         path = self._saga_path(saga_data.id)
         if not path.exists():
-            raise Exception("Saga couldn't be found")
+            raise MersalExceptionError("Saga couldn't be found")
 
         current_saga_data = self._read_saga(path)
         if not current_saga_data.revision == saga_data.revision:
@@ -129,7 +130,7 @@ class FileSystemSagaStorage(SagaStorage):
                     existing_value = getattr(existing_saga_data.data, property_name)
 
                     if existing_value == new_value:
-                        raise Exception("Correlation properties are not unique!")
+                        raise MersalExceptionError("Correlation properties are not unique!")
 
 
 def _serialize_saga_data(saga_data: SagaData) -> dict:

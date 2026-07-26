@@ -1,4 +1,5 @@
-from typing import Any, Protocol
+import types
+from typing import Protocol
 
 from typing_extensions import Self
 
@@ -19,5 +20,5 @@ class Worker(Protocol):
         self,
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
-        exc_tb: Any | None,
+        exc_tb: types.TracebackType | None,
     ) -> None: ...

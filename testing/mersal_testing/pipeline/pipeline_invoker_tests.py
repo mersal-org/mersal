@@ -3,6 +3,7 @@ from collections.abc import Callable
 from typing import Any
 
 import anyio
+import anyio.lowlevel
 import pytest
 
 from mersal.pipeline import (
@@ -34,7 +35,7 @@ pytestmark = pytest.mark.anyio
 
 class SleepingIncomingStep(IncomingStep):
     async def __call__(self, context: IncomingStepContext, next_step: AsyncAnyCallable) -> None:
-        await anyio.sleep(0)
+        await anyio.lowlevel.checkpoint()
         await next_step()
 
 
@@ -133,5 +134,5 @@ class PipelineInvokerTestsBase:
         t1 = time.time()
 
         elapsed_time = t1 - t0
-        print("Elapsed time", elapsed_time)  # noqa: T201
+        print("Elapsed time", elapsed_time)
         assert 0

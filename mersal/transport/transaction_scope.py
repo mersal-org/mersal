@@ -1,5 +1,7 @@
+import types
 from collections.abc import Callable
-from typing import Any
+
+from typing_extensions import Self
 
 from mersal.logging import Logger
 from mersal.logging.null_logger import NullLogger
@@ -29,11 +31,13 @@ class TransactionScope:
         )
         self.logger: Logger = logger if logger is not None else NullLogger()
 
-    async def __aenter__(self) -> "TransactionScope":
+    async def __aenter__(self) -> Self:
         AmbientContext().current = self.transaction_context
         return self
 
-    async def __aexit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+    async def __aexit__(
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, tb: types.TracebackType | None
+    ) -> None:
         await self.close()
 
     async def complete(self) -> None:

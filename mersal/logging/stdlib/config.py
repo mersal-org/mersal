@@ -54,7 +54,7 @@ class StdlibLoggingConfig(LoggingConfig):
             logger_config["root"] = self.root
 
         dictConfig(logger_config)
-        return lambda: StdlibLogger()  # noqa: PLW0108
+        return lambda: StdlibLogger()
 
     @staticmethod
     def set_level(logger: Logger, level: int) -> None:

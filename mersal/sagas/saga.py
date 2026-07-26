@@ -1,3 +1,4 @@
+import typing
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from typing import Any, Generic, Protocol, runtime_checkable
@@ -19,7 +20,7 @@ class Saga(Protocol, Generic[SagaDataT]):
     correlator: Correlator
     data: SagaData[SagaDataT]
     data_type: type[SagaDataT]
-    initiating_message_types: set[type]
+    initiating_message_types: typing.ClassVar[set[type]]
     is_completed: bool
     is_unchanged: bool
 
@@ -34,7 +35,7 @@ class Saga(Protocol, Generic[SagaDataT]):
 
 
 class SagaBase(Saga, Generic[SagaDataT], metaclass=ABCMeta):
-    initiating_message_types: set[type]
+    initiating_message_types: typing.ClassVar[set[type]]
 
     def __init__(self) -> None:
         self.data: SagaData[SagaDataT] = None  # type: ignore[assignment]

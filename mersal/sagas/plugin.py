@@ -31,7 +31,7 @@ class SagaPlugin(Plugin):
         self._correlation_error_handler = config.correlation_error_handler
 
     def __call__(self, configurator: StandardConfigurator) -> None:
-        from mersal.pipeline import ActivateHandlersStep  # noqa: PLC0415
+        from mersal.pipeline import ActivateHandlersStep
 
         def decorate_pipeline(configurator: StandardConfigurator) -> Pipeline:
             correlation_error_handler = (
