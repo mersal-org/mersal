@@ -8,6 +8,7 @@ from mersal.persistence.in_memory import (
     InMemorySubscriptionStorage,
     InMemorySubscriptionStore,
 )
+from mersal.routing.default import DefaultRouterRegistrationConfig
 from mersal.transport.in_memory import InMemoryNetwork
 from mersal.transport.in_memory.in_memory_transport_plugin import (
     InMemoryTransportPluginConfig,
@@ -66,20 +67,55 @@ class TestPubSubIntegration:
             await app.publish(message, {})
 
     async def test_pub_sub_with_decentralized_storage(self):
+        """With decentralized storage, subscribing/unsubscribing has no shared store to write to,
+        so it must round-trip a SubscribeRequest/UnsubscribeRequest through the topic's owner
+        (the app that publishes that event type), which registers the subscriber in its own
+        local storage.
+        """
         network = InMemoryNetwork()
-        queue_address = "test-queue"
-        activator = BuiltinHandlerActivator()
-        plugins = [
-            InMemoryTransportPluginConfig(network, queue_address).plugin,
-        ]
-        app = Mersal(
-            "m1",
-            activator,
-            plugins=plugins,
+        owner_queue_address = "owner-queue"
+        subscriber_queue_address = "subscriber-queue"
+
+        owner_activator = BuiltinHandlerActivator()
+        owner_app = Mersal(
+            "owner",
+            owner_activator,
+            plugins=[InMemoryTransportPluginConfig(network, owner_queue_address).plugin],
             subscription_storage=InMemorySubscriptionStorage.decentralized(),
         )
-        with pytest.raises(NotImplementedError):
-            await app.subscribe(DummyMessage)
+
+        handler = DummyMessageHandler()
+        subscriber_activator = BuiltinHandlerActivator()
+        subscriber_activator.register(DummyMessage, lambda _, __: handler)
+        subscriber_app = Mersal(
+            "subscriber",
+            subscriber_activator,
+            plugins=[InMemoryTransportPluginConfig(network, subscriber_queue_address).plugin],
+            subscription_storage=InMemorySubscriptionStorage.decentralized(),
+            default_router_registration=DefaultRouterRegistrationConfig({owner_queue_address: [DummyMessage]}),
+        )
+
+        await owner_app.start()
+        await subscriber_app.start()
+
+        await subscriber_app.subscribe(DummyMessage)
+        await sleep(0.1)
+
+        await owner_app.publish(DummyMessage())
+        await sleep(0.1)
+
+        assert handler.calls == 1
+
+        await subscriber_app.unsubscribe(DummyMessage)
+        await sleep(0.1)
+
+        await owner_app.publish(DummyMessage())
+        await sleep(0.1)
+
+        assert handler.calls == 1
+
+        await subscriber_app.stop()
+        await owner_app.stop()
 
     async def test_pub_sub_happy_path(self):
         network = InMemoryNetwork()

@@ -47,7 +47,7 @@ from mersal.serialization import (
     MessageSerializer,
     Serializer,
 )
-from mersal.subscription import SubscriptionStorage
+from mersal.subscription import InternalHandlersActivator, SubscriptionStorage
 from mersal.topic import DefaultTopicNameConvention, TopicNameConvention
 from mersal.transport import Transport
 from mersal.workers import WorkerFactory
@@ -67,6 +67,15 @@ class DefaultPlugin(Plugin):
         self._register_default_dependency_if_needed(Logger, lambda _: NullLogger())
         self._register_default_dependency_if_needed(RetryStrategySettings, lambda _: RetryStrategySettings())
         self._register_default_dependency_if_needed(SubscriptionStorage, lambda _: NotImplementedSubscriptionStorage())
+
+        def decorate_handler_activator_with_internal_handlers(
+            config: StandardConfigurator,
+        ) -> HandlerActivator:
+            handler_activator = config.get(HandlerActivator)  # type: ignore[type-abstract]
+            subscription_storage = config.get(SubscriptionStorage)  # type: ignore[type-abstract]
+            return InternalHandlersActivator(handler_activator, subscription_storage)
+
+        configurator.decorate(HandlerActivator, decorate_handler_activator_with_internal_handlers)
         self._register_default_dependency_if_needed(
             ErrorTracker,
             lambda d: InMemoryErrorTracker(d.get(RetryStrategySettings).max_no_of_retries),
@@ -89,7 +98,10 @@ class DefaultPlugin(Plugin):
                 fail_fast_exceptions=config.get(DefaultFailFastCheckerExceptionsContainer).exceptions
             ),
         )
-        self._register_default_dependency_if_needed(Router, lambda _: DefaultRouter())
+        self._register_default_dependency_if_needed(
+            Router,
+            lambda config: DefaultRouter(topic_name_convention=config.get(TopicNameConvention)),  # type: ignore[type-abstract]
+        )
         self._register_default_dependency_if_needed(
             RetryStrategy,
             lambda config: DefaultRetryStrategy(

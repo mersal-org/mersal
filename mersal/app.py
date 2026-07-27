@@ -15,6 +15,7 @@ from mersal.lifespan import LifespanHandler
 from mersal.lifespan.autosubscribe import AutosubscribeConfig
 from mersal.logging import Logger, LoggingConfig
 from mersal.messages import LogicalMessage, MessageHeaders
+from mersal.messages.control import SubscribeRequest, UnsubscribeRequest
 from mersal.outbox.config import OutboxConfig
 from mersal.outbox.plugin import OutboxPlugin
 from mersal.persistence.in_memory import InMemorySagaStorage
@@ -306,6 +307,12 @@ class Mersal:
         topic = self.topic_name_convention.get_topic_name(event_type)
         await self._subscribe(topic)
 
+    async def unsubscribe(self, event_type: type) -> None:
+        """Unsubscribe from the passed event type."""
+
+        topic = self.topic_name_convention.get_topic_name(event_type)
+        await self._unsubscribe(topic)
+
     async def _send(
         self,
         destination_addresses: set[str],
@@ -365,7 +372,18 @@ class Mersal:
         if self.subscription_storage.is_centralized:
             await self.subscription_storage.register_subscriber(topic, subscriber_address)
         else:
-            raise NotImplementedError("Can't handle transports that handle pub/sub natively yet")
+            owner_address = await self.router.get_owner_address(topic)
+            message = SubscribeRequest(topic=topic, subscriber_address=subscriber_address)
+            await self.send(message, addresses={owner_address})
+
+    async def _unsubscribe(self, topic: str) -> None:
+        subscriber_address = self.transport.address
+        if self.subscription_storage.is_centralized:
+            await self.subscription_storage.unregister_subscriber(topic, subscriber_address)
+        else:
+            owner_address = await self.router.get_owner_address(topic)
+            message = UnsubscribeRequest(topic=topic, subscriber_address=subscriber_address)
+            await self.send(message, addresses={owner_address})
 
     def _create_message(self, body: Any, headers: Mapping[str, Any] | None) -> LogicalMessage:
         _headers = MessageHeaders(headers) if headers else MessageHeaders()
