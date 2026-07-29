@@ -1,8 +1,10 @@
 import itertools
 from typing import Any, Protocol
 
+import anyio
 import pytest
 
+from mersal.messages import TransportMessage
 from mersal.transport import DefaultTransactionContext, Transport
 from mersal.types.callable_types import AsyncAnyCallable
 from mersal_testing.test_doubles import TransportMessageBuilder
@@ -20,13 +22,55 @@ class TransportMaker(Protocol):
     def __call__(self, **kwargs: Any) -> Transport: ...
 
 
+# This suite always calls `await transport()` right after constructing each transport,
+# before it's addressed as a send destination - mirroring how a real app starts a
+# transport before anything can reach it. In-memory/file-backed transports don't
+# strictly need this (there's no broker-side queue to declare), but broker-backed ones
+# (e.g. RabbitMQ) do: without it, sending to a transport that hasn't started yet would
+# hit a destination that doesn't exist server-side.
+
+
 class BasicTransportTest:
+    #: Deadline for a receive that is expected to produce a message. Generous, since a
+    #: correct transport returns as soon as the message arrives; it only fires (failing
+    #: the test with a `TimeoutError`) when delivery is genuinely broken - the
+    #: alternative being a test that hangs forever.
+    receive_timeout: float = 5.0
+
+    #: How long a receive on a queue expected to be empty is given before the suite
+    #: concludes that no message is coming. Only transports whose `receive` blocks
+    #: until a message arrives (e.g. broker-backed push consumers) ever wait this
+    #: long; transports that return `None` immediately never touch it.
+    empty_receive_timeout: float = 0.5
+
     @pytest.fixture
     def transport_maker(self) -> TransportMaker:
         def maker(**kwargs: Any) -> Transport:
             raise NotImplementedError()
 
         return maker
+
+    async def receive(
+        self,
+        transport: Transport,
+        context: DefaultTransactionContext,
+        *,
+        expect_empty: bool = False,
+    ) -> TransportMessage | None:
+        """Call `transport.receive` with a deadline instead of trusting it to return.
+
+        The transport contract allows `receive` to block until a message shows up -
+        broker-backed push consumers do exactly that; only in-memory-style transports
+        return `None` immediately. The suite therefore never calls `receive` bare: the
+        deadline is what turns "blocks forever" into either a fast failure (a message
+        was expected) or an empty-queue verdict (none was).
+        """
+        if expect_empty:
+            with anyio.move_on_after(self.empty_receive_timeout):
+                return await transport.receive(context)
+            return None
+        with anyio.fail_after(self.receive_timeout):
+            return await transport.receive(context)
 
     async def assert_with_context(
         self,
@@ -44,9 +88,10 @@ class BasicTransportTest:
     async def test_empty_queue_returns_none_for_receive(self, transport_maker: TransportMaker) -> None:
         """When a queue is empty, invoking the `receive` method should return `None`."""
         transport = transport_maker(input_queue_address="moon")
+        await transport()
 
         async def _assert(context: DefaultTransactionContext) -> None:
-            transport_message = await transport.receive(context)
+            transport_message = await self.receive(transport, context, expect_empty=True)
             assert not transport_message
 
         await self.assert_with_context(_assert)
@@ -57,6 +102,8 @@ class BasicTransportTest:
         transport2_address = "ad2"
         transport1 = transport_maker(input_queue_address=transport1_address)
         transport2 = transport_maker(input_queue_address=transport2_address)
+        await transport1()
+        await transport2()
         transport_message1 = TransportMessageBuilder.build()
         transport_message2 = TransportMessageBuilder.build()
 
@@ -67,9 +114,9 @@ class BasicTransportTest:
         await self.assert_with_context(_assert1)
 
         async def _assert2(context: DefaultTransactionContext) -> None:
-            received_message1 = await transport2.receive(context)
-            received_message2 = await transport2.receive(context)
-            received_message3 = await transport2.receive(context)
+            received_message1 = await self.receive(transport2, context)
+            received_message2 = await self.receive(transport2, context)
+            received_message3 = await self.receive(transport2, context, expect_empty=True)
             assert received_message1
             assert received_message2
             received_ids = {str(received_message1.headers.message_id), str(received_message2.headers.message_id)}
@@ -89,6 +136,8 @@ class BasicTransportTest:
         transport2_address = "ad2"
         transport1 = transport_maker(input_queue_address=transport1_address)
         transport2 = transport_maker(input_queue_address=transport2_address)
+        await transport1()
+        await transport2()
         transport_message = TransportMessageBuilder.build()
 
         async def _assert1(context: DefaultTransactionContext) -> None:
@@ -97,7 +146,7 @@ class BasicTransportTest:
         await self.assert_with_context(_assert1, commit=False, ack=should_ack)
 
         async def _assert2(context: DefaultTransactionContext) -> None:
-            received_message = await transport2.receive(context)
+            received_message = await self.receive(transport2, context, expect_empty=True)
             assert not received_message
 
         await self.assert_with_context(_assert2)
@@ -112,6 +161,8 @@ class BasicTransportTest:
         transport2_address = "ad2"
         transport1 = transport_maker(input_queue_address=transport1_address)
         transport2 = transport_maker(input_queue_address=transport2_address)
+        await transport1()
+        await transport2()
         transport_message = TransportMessageBuilder.build()
 
         async def _assert1(context: DefaultTransactionContext) -> None:
@@ -120,7 +171,7 @@ class BasicTransportTest:
         await self.assert_with_context(_assert1, commit=True, ack=should_ack)
 
         async def _assert2(context: DefaultTransactionContext) -> None:
-            received_message = await transport2.receive(context)
+            received_message = await self.receive(transport2, context)
             assert received_message
 
         await self.assert_with_context(_assert2)
@@ -140,6 +191,8 @@ class BasicTransportTest:
         transport2_address = "ad2"
         transport1 = transport_maker(input_queue_address=transport1_address)
         transport2 = transport_maker(input_queue_address=transport2_address)
+        await transport1()
+        await transport2()
         transport_message = TransportMessageBuilder.build()
 
         async def _assert1(context: DefaultTransactionContext) -> None:
@@ -148,7 +201,7 @@ class BasicTransportTest:
         await self.assert_with_context(_assert1)
 
         async def _assert2(context: DefaultTransactionContext) -> None:
-            received_message = await transport2.receive(context)
+            received_message = await self.receive(transport2, context)
             assert received_message
             assert str(received_message.headers.message_id) == str(transport_message.headers.message_id)
 
@@ -160,14 +213,14 @@ class BasicTransportTest:
         )
 
         async def _assert3(context: DefaultTransactionContext) -> None:
-            received_message = await transport2.receive(context)
+            received_message = await self.receive(transport2, context)
             assert received_message
             assert str(received_message.headers.message_id) == str(transport_message.headers.message_id)
 
         await self.assert_with_context(_assert3, commit=should_commit_second_time, ack=True)
 
         async def _assert4(context: DefaultTransactionContext) -> None:
-            received_message = await transport2.receive(context)
+            received_message = await self.receive(transport2, context, expect_empty=True)
             assert not received_message
 
         await self.assert_with_context(_assert4)
