@@ -1,7 +1,9 @@
 name: Build & Publish Package
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Tests And Linting"]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
     inputs:
@@ -10,15 +12,16 @@ on:
         required: true
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch || github.ref }}
   cancel-in-progress: true
 
 permissions: {}
 
 jobs:
-  # Always build & lint the package, on every push and every release.
+  # Build & lint the package, once CI has passed on main, and on every release.
   build-package:
     name: Build & verify package
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       attestations: write # necessary for GitHub build provenance attestations
@@ -26,6 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0 # hatch-vcs needs the full history/tags to compute the version
 
       - uses: hynek/build-and-inspect-python-package@v2.18.0
@@ -40,9 +44,13 @@ jobs:
 
   # Publish every commit on main as a dev build to Test PyPI, so the package
   # can be installed and sanity-checked before it's ever cut into a release.
+  # Gated on the "Tests And Linting" workflow having passed for that commit.
   release-test-pypi:
     name: Publish in-dev package to test.pypi.org
-    if: github.repository_owner == 'mersal-org' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >
+      github.repository_owner == 'mersal-org' &&
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     needs: build-package
     environment: release-test-pypi
