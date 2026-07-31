@@ -27,7 +27,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Install mise
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@v4
         with:
           install: false
           cache: true
@@ -60,7 +60,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Install mise
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@v4
         with:
           install: false
           cache: true
@@ -86,7 +86,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Install mise
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@v4
         with:
           install: false
           cache: true
@@ -112,7 +112,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Install mise
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@v4
         with:
           install: false
           cache: true
@@ -193,7 +193,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Install mise
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@v4
         with:
           install: false
           cache: true
