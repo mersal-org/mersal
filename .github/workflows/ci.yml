@@ -129,13 +129,22 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
         os: ["ubuntu-latest"]
     uses: ./.github/workflows/test.yml
     with:
-      coverage: ${{ matrix.python-version == '3.13' }}
+      coverage: ${{ matrix.python-version == '3.14' }}
       python-version: ${{ matrix.python-version }}
       os: ${{ matrix.os }}
+
+  test-py315-beta:
+    name: "test (3.15 beta, allowed to fail)"
+    continue-on-error: true
+    uses: ./.github/workflows/test.yml
+    with:
+      python-version: "3.15"
+      os: ubuntu-latest
+      coverage: false
 
   codecov:
     needs:
