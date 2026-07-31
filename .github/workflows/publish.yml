@@ -24,7 +24,7 @@ jobs:
       attestations: write # necessary for GitHub build provenance attestations
       id-token: write # necessary for GitHub build provenance attestations
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # hatch-vcs needs the full history/tags to compute the version
 
@@ -92,7 +92,7 @@ jobs:
     permissions:
       contents: write # necessary to push the tag and create the release
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # full history so --generate-notes can find the previous tag
 
