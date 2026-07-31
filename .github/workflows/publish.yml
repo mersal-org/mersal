@@ -3,9 +3,11 @@ name: Build & Publish Package
 on:
   push:
     branches: [main]
-  release:
-    types: [published]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 1.2.4), without the leading 'v'"
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -27,6 +29,12 @@ jobs:
           fetch-depth: 0 # hatch-vcs needs the full history/tags to compute the version
 
       - uses: hynek/build-and-inspect-python-package@v2
+        env:
+          # On a real release, stamp the exact version we're about to publish
+          # without the tag existing yet -- hatch-vcs (via setuptools_scm)
+          # honors this override. On push-to-main dev builds this is empty,
+          # so the version keeps deriving from the most recent tag as usual.
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || '' }}
         with:
           attest-build-provenance-github: "true"
 
@@ -52,10 +60,10 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
 
-  # Publish to the real PyPI whenever a GitHub Release is published.
+  # Publish to the real PyPI on a manually dispatched release run.
   release-pypi:
     name: Publish released package to pypi.org
-    if: github.repository_owner == 'mersal-org' && github.event_name == 'release' && github.event.action == 'published'
+    if: github.repository_owner == 'mersal-org' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     needs: build-package
     environment: release
@@ -72,3 +80,28 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           attestations: true
+
+  # Only once PyPI publishing has actually succeeded do we tag the commit and
+  # create the GitHub Release -- the tag is a record of what shipped, not a
+  # trigger for shipping it.
+  tag-and-release:
+    name: Tag release and create GitHub Release
+    if: github.repository_owner == 'mersal-org' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    needs: release-pypi
+    permissions:
+      contents: write # necessary to push the tag and create the release
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # full history so --generate-notes can find the previous tag
+
+      - name: Tag and push
+        run: |
+          git tag "v${{ github.event.inputs.version }}"
+          git push origin "v${{ github.event.inputs.version }}"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "v${{ github.event.inputs.version }}" --generate-notes

@@ -31,11 +31,16 @@ derived entirely from git tags via `hatch-vcs
 - On any other commit, the version is a development version derived from the
   most recent tag, e.g. ``1.2.4.dev3`` for the 3rd commit after ``v1.2.3``.
 
-This means making a release is just a matter of pushing a tag -- there is no
-version-bump commit or changelog-file merge conflict to manage.
+There is no version-bump commit or changelog-file merge conflict to manage --
+but note the release pipeline below stamps the version explicitly rather
+than waiting for the tag to exist (see step 3).
 
 Making a release
 -----------------
+
+The tag and GitHub Release are the **last** things created, not the first --
+if PyPI publishing fails partway through, nothing is tagged and no version
+number is burned.
 
 1. Make sure ``main`` is green (CI passing) and contains everything you want
    to ship.
@@ -45,25 +50,26 @@ Making a release
    - **minor** (``1.2.3`` -> ``1.3.0``): new, backwards-compatible functionality.
    - **major** (``1.2.3`` -> ``2.0.0``): breaking changes.
 
-3. Tag the release and push the tag:
+3. Go to `Actions -> Build & Publish Package
+   <https://github.com/mersal-org/mersal/actions/workflows/publish.yml>`_,
+   click **Run workflow**, enter the version (e.g. ``1.2.4``, no leading
+   ``v``), and dispatch it on ``main``.
 
-   .. code-block:: shell
+4. `.github/workflows/publish.yml <.github/workflows/publish.yml>`_ then:
 
-      git tag v1.2.4
-      git push origin v1.2.4
+   - builds the package with that exact version stamped in via
+     ``SETUPTOOLS_SCM_PRETEND_VERSION`` (the tag doesn't need to exist yet),
+   - publishes it to PyPI using `Trusted Publishing
+     <https://docs.pypi.org/trusted-publishers/>`_ -- no API tokens involved,
+   - and only once that succeeds, tags the commit ``v1.2.4`` and creates the
+     `GitHub Release <https://github.com/mersal-org/mersal/releases>`_ with
+     ``--generate-notes`` (built from merged PR titles -- keep PR
+     titles/commits following `Conventional Commits
+     <https://www.conventionalcommits.org/>`_, which is already enforced by
+     pre-commit).
 
-4. Go to `GitHub Releases
-   <https://github.com/mersal-org/mersal/releases/new>`_, pick the tag you
-   just pushed, click **Generate release notes** (GitHub builds these from
-   merged PR titles -- keep PR titles/commits following `Conventional
-   Commits <https://www.conventionalcommits.org/>`_, which is already
-   enforced by pre-commit), review, and click **Publish release**.
-
-5. Publishing the release triggers `.github/workflows/publish.yml
-   <.github/workflows/publish.yml>`_, which builds the package with the
-   version baked in from the tag and uploads it to PyPI using `Trusted
-   Publishing <https://docs.pypi.org/trusted-publishers/>`_ -- no API tokens
-   involved.
+If any step fails, fix the issue and re-run the workflow with the same
+version -- nothing was tagged or released.
 
 Continuous pre-releases on Test PyPI
 -------------------------------------
