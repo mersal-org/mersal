@@ -32,7 +32,7 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0 # hatch-vcs needs the full history/tags to compute the version
 
-      - uses: hynek/build-and-inspect-python-package@v2.18.0
+      - uses: hynek/build-and-inspect-python-package@v3.0.1
         env:
           # On a real release, stamp the exact version we're about to publish
           # without the tag existing yet -- hatch-vcs (via setuptools_scm)
