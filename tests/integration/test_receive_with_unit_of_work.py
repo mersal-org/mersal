@@ -134,4 +134,4 @@ class TestUnitOfWorkIntegration:
         await app.start()
         await sleep(0.1)
         assert uow_helper.message_context
-        assert uow_helper.message_context.headers.message_id == message_id
+        assert uow_helper.message_context.headers.message_id == str(message_id)

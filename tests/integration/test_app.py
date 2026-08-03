@@ -60,5 +60,5 @@ class TestAppIntegration:
         await app.send_local(message1, headers={"message_id": message1_id})
         await app.send_local(message2, headers={"message_id": message2_id})
         await sleep(1)
-        assert len(error_tracker._registered_errors_spy[message1_id]) == 1
-        assert len(error_tracker._registered_errors_spy[message2_id]) == 5
+        assert len(error_tracker._registered_errors_spy[str(message1_id)]) == 1
+        assert len(error_tracker._registered_errors_spy[str(message2_id)]) == 5

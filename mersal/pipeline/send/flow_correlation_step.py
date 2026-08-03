@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Any, cast
+from typing import cast
 
 from mersal.messages import LogicalMessage
 from mersal.messages.message_headers import MessageHeaders
@@ -40,7 +40,7 @@ class FlowCorrelationStep:
         self,
         incoming_step_context: IncomingStepContext | None,
         sent_message_headers: MessageHeaders,
-    ) -> tuple[Any, int]:
+    ) -> tuple[str | None, int]:
         if incoming_step_context:
             incoming_message_headers = incoming_step_context.load(TransportMessage).headers
             correlation_id = (
@@ -65,7 +65,7 @@ class FlowCorrelationStep:
         self,
         incoming_step_context: IncomingStepContext | None,
         sent_message_headers: MessageHeaders,
-    ) -> Any:
+    ) -> str | None:
         if incoming_step_context:
             return incoming_step_context.load(TransportMessage).headers.message_id
         return sent_message_headers.message_id

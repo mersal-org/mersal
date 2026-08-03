@@ -22,6 +22,8 @@ def message_completed_event_publisher(
 ) -> Callable[[object], Awaitable[None]]:
     async def handler(_: object) -> None:
         completed_message_id = message_context.headers.message_id
+        if completed_message_id is None:
+            raise ValueError("Cannot publish MessageCompletedEvent: the completed message has no message_id header.")
         published_message_id = uuid.uuid4()
         await app.publish(
             MessageCompletedEvent(completed_message_id=completed_message_id),

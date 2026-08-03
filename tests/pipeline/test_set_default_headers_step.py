@@ -53,7 +53,7 @@ class TestSetDefaultHeadersStep:
         counter = Counter()
         await subject(context, counter.task)
 
-        assert message.headers.get("message_id") == message_id
+        assert message.headers.get("message_id") == str(message_id)
         assert counter.total == 1
 
     async def test_using_a_custom_message_id_generator(self):
