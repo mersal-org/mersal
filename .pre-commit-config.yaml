@@ -22,13 +22,13 @@ repos:
       - id: mixed-line-ending
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.0
+    rev: v0.16.1
     hooks:
       - id: ruff-check
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
   - repo: https://github.com/crate-ci/typos
-    rev: "v1"
+    rev: v1
     hooks:
       - id: typos
   - repo: https://github.com/python-formate/flake8-dunder-all
@@ -52,3 +52,23 @@ repos:
     hooks:
       - id: interrogate
         args: [tests]
+  - repo: local
+    hooks:
+      - id: ty
+        name: ty
+        entry: mise run type-check:ty
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: mypy
+        name: mypy
+        entry: mise run type-check:mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: pyright
+        name: basedpyright
+        entry: mise run type-check:pyright
+        language: system
+        types: [python]
+        pass_filenames: false
