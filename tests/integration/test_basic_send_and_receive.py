@@ -98,6 +98,7 @@ class TestBasicSendAndReceiveIntegration:
         async with app:
             await anyio.lowlevel.checkpoint()
 
+        assert app.worker
         assert not app.worker._running  # pyright: ignore[reportAttributeAccessIssue]
         assert message.internal == [1, 1]
 

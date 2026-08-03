@@ -28,6 +28,10 @@ StandardConfiguratorResolver: TypeAlias = Callable[["StandardConfigurator"], Any
 class StandardConfigurator:
     def __init__(self) -> None:
         self.mersal: Mersal
+        # Transports read this to decide whether to set up resources only needed for
+        # receiving (e.g. an input queue/subscription), since a send-only app never
+        # receives.
+        self.send_only: bool = False
         self._dependency_resolver = DependencyResolver()
 
     def register(self, dependency_type: type, resolver: StandardConfiguratorResolver) -> None:

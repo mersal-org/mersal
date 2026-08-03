@@ -6,7 +6,7 @@ Overview
 
 So now we have setup our Mersal app with our chosen transport. It's time to send and receive messages. This sections covers sending while the next discusses receiving.
 
-It's important to note here that in message driven systems, sending and receiving are completely separate processes [#]_. It's a one way communication system. We can even have a Mersal app that only send messages but doesn't handle any messages.
+It's important to note here that in message driven systems, sending and receiving are completely separate processes [#]_. It's a one way communication system. We can even have a Mersal app that only sends messages but doesn't handle any messages - see :ref:`send-only apps <send_only_apps>`.
 
 .. note::
     You can send messages without :ref:`starting <starting_app>` the Mersal application. This might be useful in environments where startup time is important, for example in serverless offerings.

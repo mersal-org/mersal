@@ -98,6 +98,7 @@ class Mersal:
         max_parallelism: int = 1,
         logging_config: LoggingConfig | None = None,
         debug: bool = False,
+        send_only: bool = False,
     ):
         """Initializes the Mersal app.
 
@@ -132,6 +133,9 @@ class Mersal:
             max_parallelism: number of messages to be handled in parallel.
             logging_config: configuration for the logging system.
             debug: controls debug mode.
+            send_only: marks this app as send-only - it will never receive messages,
+                so no worker is created and transports can skip setting up
+                receive-side resources (e.g. an input queue/subscription).
         """
 
         if router and default_router_registration:
@@ -142,6 +146,7 @@ class Mersal:
         self.name = name
         self.handler_activator = handler_activator
         self.configurator = StandardConfigurator()
+        self.configurator.send_only = send_only
 
         plugins = list(plugins or [])
         plugins.append(generic_registration_plugin(handler_activator, HandlerActivator))
@@ -234,13 +239,16 @@ class Mersal:
         self.topic_name_convention = self.configurator.get(TopicNameConvention)  # type: ignore[type-abstract]
         self.pipeline_invoker = self.configurator.get(PipelineInvoker)  # type: ignore[type-abstract]
         self.debug = debug
-        self.worker: Worker
+        self.send_only = send_only
+        self.worker: Worker | None = None
         self._create_worker()
         self._exit_stack: AsyncExitStack | None = None
 
     async def start(self) -> None:
         for hook in self.on_startup_hooks:
             await AsyncCallable(hook)()
+        if self.worker is None:
+            return
         self._exit_stack = AsyncExitStack()
         await self._exit_stack.enter_async_context(self.worker)
 
@@ -391,6 +399,8 @@ class Mersal:
         return LogicalMessage(body, _headers)
 
     def _create_worker(self) -> None:
+        if self.send_only:
+            return
         self.worker = self.worker_factory.create_worker(self.name)
 
     @property

@@ -19,3 +19,11 @@ Glossary
      .. seealso::
 
         :doc:`Idempotency </usage/idempotency>`
+
+   send-only
+
+     an app that only sends or publishes messages and never receives any. It has no worker polling the transport, and its transport may skip setting up resources (e.g. an input queue) that are only needed for receiving.
+
+     .. seealso::
+
+        :ref:`Send-only Apps <send_only_apps>`
