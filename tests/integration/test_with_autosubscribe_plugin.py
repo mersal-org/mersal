@@ -85,7 +85,7 @@ class TestAutosubcribePlugin:
         await app.publish(PublishedMessage1(), {})
         await app.publish(PublishedMessage2(), {})
         await app.publish(
-            MessageCompletedEvent(completed_message_id=uuid.uuid4()),
+            MessageCompletedEvent(completed_message_id=str(uuid.uuid4())),
             {},
         )
 
@@ -131,7 +131,7 @@ class TestAutosubcribePlugin:
         await app.publish(PublishedMessage1(), {})
         await app.publish(PublishedMessage2(), {})
         await app.publish(
-            MessageCompletedEvent(completed_message_id=uuid.uuid4()),
+            MessageCompletedEvent(completed_message_id=str(uuid.uuid4())),
             {},
         )
 

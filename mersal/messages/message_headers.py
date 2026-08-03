@@ -20,8 +20,8 @@ class MessageHeaders(UserDict, Mapping[str, str]):
     correlation_sequence_key = "correlation_sequence"
     causation_id_key = "causation_id"
 
-    def __setitem__(self, key: str, value: object) -> None:
-        super().__setitem__(str(key), str(value))
+    def __setitem__(self, key: str, item: object) -> None:
+        super().__setitem__(str(key), str(item))
 
     @property
     def message_id(self) -> str | None:
