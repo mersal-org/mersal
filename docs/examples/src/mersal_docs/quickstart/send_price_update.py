@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import anyio
 from main import make_mersal_app
-
 from messages import UpdateProductPrice
 
 __all__ = ("main",)

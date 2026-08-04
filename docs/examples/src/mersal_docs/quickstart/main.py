@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 
 import anyio
+from messages import PriceDecreased, UpdateProductPrice
 from notify_wishlist_users_handler import NotifyWishlistUsersHandler
 from record_price_change_handler import RecordPriceChangeHandler
 from update_price_message_handler import UpdateProductPriceHandler
@@ -16,7 +17,6 @@ from mersal.persistence.in_memory import (
 )
 from mersal.serialization.dataclass_serializer import DataclassSerializer
 from mersal.transport.file_system import FileSystemTransportConfig
-from messages import PriceDecreased, UpdateProductPrice
 
 __all__ = (
     "main",

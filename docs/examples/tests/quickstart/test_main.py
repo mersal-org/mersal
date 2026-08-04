@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from anyio import sleep
 from main import make_mersal_app
+from messages import PriceDecreased, UpdateProductPrice
 from notify_wishlist_users_handler import (
     FlakyNotifyWishlistUsersHandler,
     NotifyWishlistUsersHandler,
@@ -11,7 +12,6 @@ from record_price_change_handler import RecordPriceChangeHandler
 from update_price_message_handler import UpdateProductPriceHandler
 
 from mersal.persistence.in_memory import InMemorySubscriptionStore
-from messages import PriceDecreased, UpdateProductPrice
 
 __all__ = (
     "test_failing_handler_ends_up_in_the_error_queue",
