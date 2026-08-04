@@ -66,9 +66,6 @@ jobs:
       - name: Install dependencies
         run: mise run install
 
-      - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
-
       - name: Test
         if: ${{ !inputs.coverage }}
         run: mise run test

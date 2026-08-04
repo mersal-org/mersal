@@ -17,7 +17,7 @@ repos:
       - id: check-case-conflict
       - id: check-toml
       - id: debug-statements
-        exclude: ^(mersal/retry/default_retry_step\.py)$
+        exclude: ^(src/mersal/retry/default_retry_step\.py)$
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace

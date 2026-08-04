@@ -93,7 +93,7 @@ log_cli = true
 
 [tool.ruff]
 include = [
-  "mersal/**/*.{py,pyi}",
+  "src/mersal/**/*.{py,pyi}",
   "testing/**/*.{py,pyi}",
   "tests/**/*.{py,pyi}",
   "docs/examples/**/*.{py,pyi}",
@@ -103,7 +103,7 @@ target-version = "py311"
 line-length = 120
 
 src = [
-  "mersal",
+  "src",
   "testing",
   "tests",
   "docs/examples/src",
@@ -121,10 +121,10 @@ convention = "google"
 "**/testing/**/*.py" = [
   "S101", # flake8-bandit - use of assert detected
 ]
-"mersal/threading/__init__.py" = [
+"src/mersal/threading/__init__.py" = [
   "A005", # lake8-builtins - stdlib-module-shadowing
 ]
-"mersal/types/__init__.py" = [
+"src/mersal/types/__init__.py" = [
   "A005", # lake8-builtins - stdlib-module-shadowing
 ]
 "tests/profile.py" = [
@@ -158,7 +158,7 @@ fallback-version = "0.0.0"
 local_scheme = "no-local-version"
 
 [tool.hatch.build.targets.wheel]
-packages = ["mersal", "testing/mersal_testing"]
+packages = ["src/mersal", "testing/mersal_testing"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -206,7 +206,7 @@ warn_unused_ignores = false
 typeCheckingMode = "standard"
 pythonVersion = "3.11"
 include = [
-  "mersal",
+  "src/mersal",
   "testing",
   "tests",
 ]
@@ -216,7 +216,7 @@ python-version = "3.11"
 
 [tool.ty.src]
 include = [
-  "mersal",
+  "src/mersal",
   "testing",
 ]
 
