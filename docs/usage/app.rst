@@ -18,7 +18,7 @@ Passing a :py:class:`mersal.lifespan.autosubscribe.AutosubscribeConfig` to the `
 Send-only Apps
 ------------------
 
-Some apps only need to :doc:`send or publish <sending>` messages and never receive any - for example a web app that only submits commands, or a script that only publishes events. Pass ``send_only=True`` when constructing :py:class:`mersal.app.Mersal` to mark an app as :term:`send-only`:
+Some apps only need to :doc:`send or publish <sending>` messages and never receive any - for example a web app that only submits commands, or a script that only publishes events. Pass ``send_only=True`` when constructing :py:class:`mersal.core.app.Mersal` to mark an app as :term:`send-only`:
 
 .. code-block:: python
 
@@ -42,4 +42,4 @@ Transport implementations can read the ``send_only`` flag off the ``StandardConf
 
             configurator.register(Transport, register_transport)
 
-Both the ``mersal_rabbitmq`` and ``mersal_gcp_pubsub`` transports already honor this: when ``send_only`` is set, they skip declaring/binding their own input queue and never start a consumer for it.
+Both the ``mersal.rabbitmq`` and ``mersal.gcp_pubsub`` transports already honor this: when ``send_only`` is set, they skip declaring/binding their own input queue and never start a consumer for it.

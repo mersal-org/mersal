@@ -2,14 +2,14 @@ from typing import Any
 
 import pytest
 
+from mersal.testing.core.transport.basic_transport_tests import (
+    BasicTransportTest,
+    TransportMaker,
+)
 from mersal.transport.in_memory import (
     InMemoryNetwork,
     InMemoryTransport,
     InMemoryTransportConfig,
-)
-from mersal_testing.transport.basic_transport_tests import (
-    BasicTransportTest,
-    TransportMaker,
 )
 
 __all__ = ("TestBasicTransportFunctionalityForInMemoryTransport",)

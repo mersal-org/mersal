@@ -1,7 +1,7 @@
 import pytest
 
+from mersal.testing.core.test_doubles import TransportMessageBuilder
 from mersal.transport.in_memory import InMemoryNetwork
-from mersal_testing.test_doubles import TransportMessageBuilder
 
 __all__ = ("TestInMemoryNetwork",)
 

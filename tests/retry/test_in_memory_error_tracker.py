@@ -1,7 +1,7 @@
 import pytest
 
 from mersal.retry import InMemoryErrorTracker
-from mersal_testing.retry.error_tracker_base_tests import (
+from mersal.testing.core.retry.error_tracker_base_tests import (
     ErrorTrackerBaseTests,
     ErrorTrackerMaker,
 )

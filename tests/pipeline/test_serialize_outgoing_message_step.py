@@ -4,13 +4,13 @@ from mersal.messages.transport_message import TransportMessage
 from mersal.pipeline import SerializeOutgoingMessageStep
 from mersal.pipeline.outgoing_step_context import OutgoingStepContext
 from mersal.pipeline.send.destination_addresses import DestinationAddresses
-from mersal.transport import DefaultTransactionContext
-from mersal_testing.counter import Counter
-from mersal_testing.test_doubles import (
+from mersal.testing.core.counter import Counter
+from mersal.testing.core.test_doubles import (
     LogicalMessageBuilder,
     SerializerTestDouble,
     TransportMessageBuilder,
 )
+from mersal.transport import DefaultTransactionContext
 
 pytestmark = pytest.mark.anyio
 

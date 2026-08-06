@@ -75,7 +75,7 @@ Notice that the method for registration takes a sync callable as the second argu
 
     from dataclasses import dataclass
 
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
     from mersal.activation import BuiltinHandlerActivator
 
     @dataclass

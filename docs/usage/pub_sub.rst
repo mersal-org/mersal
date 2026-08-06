@@ -14,13 +14,13 @@ First lets see how to subscribe and publish then the configuration of pub/sub wi
 Subscription
 ----------------
 
-With a Mersal app, we can subscribe to any message using the :py:meth:`mersal.app.Mersal.subscribe` method. Subscribing to messages is usually something done unconditionally when we setup the app. However, the subscription can be made at any other time.
+With a Mersal app, we can subscribe to any message using the :py:meth:`mersal.core.app.Mersal.subscribe` method. Subscribing to messages is usually something done unconditionally when we setup the app. However, the subscription can be made at any other time.
 
 .. code-block:: python
 
     from dataclasses import dataclass
 
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
 
     @dataclass
     class OrderProcessedEvent:
@@ -55,7 +55,7 @@ The following example is equivalent to the one above, it saves some lines of cod
 
     from dataclasses import dataclass
     from mersal.lifespan.autosubscribe import AutosubscribeConfig
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
 
     @dataclass
     class OrderProcessedEvent:
@@ -84,7 +84,7 @@ The above is a short cut for using the autosubscribe plugin. The plugin can be u
 
     from dataclasses import dataclass
     from mersal.lifespan.autosubscribe.autosubscribe_plugin import AutosubscribePlugin, AutosubscribeConfig
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
 
     @dataclass
     class OrderProcessedEvent:
@@ -113,7 +113,7 @@ The above is a short cut for using the autosubscribe plugin. The plugin can be u
 Publishing
 ----------------
 
-With a Mersal app, we can publish any message using the :py:meth:`mersal.app.Mersal.publish` method. Just like sending, we can attach optional headers to the published message.
+With a Mersal app, we can publish any message using the :py:meth:`mersal.core.app.Mersal.publish` method. Just like sending, we can attach optional headers to the published message.
 
 Unsubscribing
 ----------------
@@ -132,7 +132,7 @@ Configuring Pub/Sub
 
 When we discussed sending, we noted that a :doc:`router <routing>` is needed to send messages. The router determines the destination address.
 
-In pub/sub, we need a component that helps us store which apps are subscribed to which topics. This is why we need to provide Mersal with an instance of :py:class:`mersal.subscription.SubscriptionStorage`. This is either provided via the ``subscription_storage`` argument passed to the :py:class:`mersal.app.Mersal` app or via a plugin. Pub/sub will **not** work without providing this.
+In pub/sub, we need a component that helps us store which apps are subscribed to which topics. This is why we need to provide Mersal with an instance of :py:class:`mersal.subscription.SubscriptionStorage`. This is either provided via the ``subscription_storage`` argument passed to the :py:class:`mersal.core.app.Mersal` app or via a plugin. Pub/sub will **not** work without providing this.
 
 Most message brokers support pub/sub natively (e.g. RabbitMQ, GCP Pub/Sub), so a Mersal transport implementation for those brokers will have an appropriate implementation for a ``SubscriptionStorage``.
 
@@ -145,7 +145,7 @@ If the broker doesn't support pub/sub (e.g. using a database as a Mersal transpo
         InMemorySubscriptionStorage,
         InMemorySubscriptionStore,
     )
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
 
     subscription_store = InMemorySubscriptionStore()
     app = Mersal("my-app",
@@ -155,6 +155,6 @@ If the broker doesn't support pub/sub (e.g. using a database as a Mersal transpo
 
 .. note::
 
-   "Centralized" means all subscriptions are stored in a single location and a call to :py:meth:`mersal.app.Mersal.subscribe` will immediately invoke the registration of a subscription to the given topic. Non Centralized means the subscription and unsubscription is performed by sending messages. Issue `#28 <https://github.com/mersal-org/mersal/issues/28>`_ discusses if this is needed or not.
+   "Centralized" means all subscriptions are stored in a single location and a call to :py:meth:`mersal.core.app.Mersal.subscribe` will immediately invoke the registration of a subscription to the given topic. Non Centralized means the subscription and unsubscription is performed by sending messages. Issue `#28 <https://github.com/mersal-org/mersal/issues/28>`_ discusses if this is needed or not.
 
    Currently non-centralized isn't supported until a transport that has native pub/sub is implemented.

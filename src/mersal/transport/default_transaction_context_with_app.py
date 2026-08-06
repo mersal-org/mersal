@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from .default_transaction_context import DefaultTransactionContext
 
 if TYPE_CHECKING:
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
 
 __all__ = ("DefaultTransactionContextWithOwningApp",)
 

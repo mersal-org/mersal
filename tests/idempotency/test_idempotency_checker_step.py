@@ -11,14 +11,14 @@ from mersal.persistence.in_memory.in_memory_message_tracker import (
 from mersal.pipeline import IncomingStepContext
 from mersal.pipeline.receive.handler_invoker import HandlerInvoker
 from mersal.pipeline.receive.handler_invokers import HandlerInvokers
+from mersal.testing.core.counter import Counter
+from mersal.testing.core.test_doubles import (
+    LogicalMessageBuilder,
+    TransportMessageBuilder,
+)
 from mersal.transport import (
     DefaultTransactionContext,
     TransactionContext,
-)
-from mersal_testing.counter import Counter
-from mersal_testing.test_doubles import (
-    LogicalMessageBuilder,
-    TransportMessageBuilder,
 )
 
 __all__ = ("TestIdempotencyCheckerStep",)

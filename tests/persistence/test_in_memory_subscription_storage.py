@@ -4,7 +4,7 @@ from mersal.persistence.in_memory import (
     InMemorySubscriptionStorage,
     InMemorySubscriptionStore,
 )
-from mersal_testing.subscription.basic_subscription_storage_tests import (
+from mersal.testing.core.subscription.basic_subscription_storage_tests import (
     BasicSubscriptionStorageTest,
     SubscriptionStorageMaker,
 )

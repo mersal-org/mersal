@@ -18,7 +18,7 @@ from mersal.transport import (
 from mersal.transport.ambient_context import AmbientContext
 
 if TYPE_CHECKING:
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
     from mersal.logging import Logger
     from mersal.messages import TransportMessage
 

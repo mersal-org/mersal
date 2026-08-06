@@ -9,8 +9,8 @@ from mersal.messages.message_headers import MessageHeaders
 from mersal.pipeline import SetDefaultHeadersStep
 from mersal.pipeline.outgoing_step_context import OutgoingStepContext
 from mersal.pipeline.send.destination_addresses import DestinationAddresses
+from mersal.testing.core.counter import Counter
 from mersal.transport import DefaultTransactionContext
-from mersal_testing.counter import Counter
 
 __all__ = ("TestSetDefaultHeadersStep",)
 

@@ -4,8 +4,8 @@ from typing import Protocol
 
 import pytest
 
+from mersal.testing.core.counter import Counter, FailingCounter
 from mersal.utils import AsyncRetrier
-from mersal_testing.counter import Counter, FailingCounter
 
 __all__ = (
     "AsyncRetrierMaker",

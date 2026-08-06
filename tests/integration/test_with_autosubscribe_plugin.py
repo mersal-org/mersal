@@ -3,7 +3,7 @@ import uuid
 import pytest
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
 from mersal.lifespan.autosubscribe import (
     AutosubscribeConfig,
 )
@@ -12,12 +12,12 @@ from mersal.persistence.in_memory import (
     InMemorySubscriptionStorage,
     InMemorySubscriptionStore,
 )
+from mersal.testing.core.app_runner_helper import AppRunnerHelper
+from mersal.testing.core.test_doubles import DummyMessage
 from mersal.transport.in_memory import InMemoryNetwork
 from mersal.transport.in_memory.in_memory_transport_plugin import (
     InMemoryTransportPluginConfig,
 )
-from mersal_testing.app_runner_helper import AppRunnerHelper
-from mersal_testing.test_doubles import DummyMessage
 
 __all__ = (
     "PublishedMessage1",

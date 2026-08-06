@@ -3,17 +3,17 @@ from asyncio import sleep
 import pytest
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
 from mersal.persistence.in_memory import (
     InMemorySubscriptionStorage,
     InMemorySubscriptionStore,
 )
 from mersal.routing.default import DefaultRouterRegistrationConfig
+from mersal.testing.core.test_doubles import DummyMessage, LogicalMessageBuilder
 from mersal.transport.in_memory import InMemoryNetwork
 from mersal.transport.in_memory.in_memory_transport_plugin import (
     InMemoryTransportPluginConfig,
 )
-from mersal_testing.test_doubles import DummyMessage, LogicalMessageBuilder
 
 __all__ = (
     "DummyMessageHandler",

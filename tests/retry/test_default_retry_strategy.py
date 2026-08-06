@@ -14,6 +14,10 @@ from mersal.retry import (
     InMemoryErrorTracker,
 )
 from mersal.retry.default_retry_step import DefaultRetryStep
+from mersal.testing.core.test_doubles import (
+    ErrorTrackerTestDouble,
+    TransportMessageBuilder,
+)
 from mersal.transport import (
     DefaultTransactionContext,
     TransactionContext,
@@ -24,10 +28,6 @@ from mersal.transport.in_memory import (
     InMemoryTransportConfig,
 )
 from mersal.types.callable_types import AsyncAnyCallable
-from mersal_testing.test_doubles import (
-    ErrorTrackerTestDouble,
-    TransportMessageBuilder,
-)
 
 __all__ = (
     "TestDefaultRetryStrategy",

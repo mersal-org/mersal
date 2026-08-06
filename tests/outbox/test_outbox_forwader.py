@@ -3,16 +3,16 @@ import pytest
 
 from mersal.logging.null_logger import NullLogger
 from mersal.outbox.outbox_forwarder import OutboxForwarder
-from mersal.threading.anyio.anyio_periodic_async_task_factory import (
-    AnyIOPeriodicTaskFactory,
-)
-from mersal.transport.default_transaction_context import DefaultTransactionContext
-from mersal_testing.test_doubles import (
+from mersal.testing.core.test_doubles import (
     OutboxStorageTestDouble,
     OutgoingMessageBuilder,
     TransportMessageBuilder,
     TransportTestDouble,
 )
+from mersal.threading.anyio.anyio_periodic_async_task_factory import (
+    AnyIOPeriodicTaskFactory,
+)
+from mersal.transport.default_transaction_context import DefaultTransactionContext
 
 __all__ = ("TestOutboxForwader",)
 

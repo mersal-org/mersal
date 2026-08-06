@@ -1,17 +1,17 @@
 from dataclasses import dataclass, field
 from typing import Any, cast
 
-from mersal_msgspec import MsgspecSerializer
-from mersal_sqlalchemy.sqlalchemy_outbox_storage import (
-    SQLAlchemyOutboxStorageConfig,
-)
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
+from mersal.msgspec import MsgspecSerializer
 from mersal.outbox import OutboxConfig
 from mersal.pipeline import MessageContext
+from mersal.sqlalchemy.sqlalchemy_outbox_storage import (
+    SQLAlchemyOutboxStorageConfig,
+)
 from mersal.transport.in_memory import (
     InMemoryNetwork,
     InMemoryTransportConfig,

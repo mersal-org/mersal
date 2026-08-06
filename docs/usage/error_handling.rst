@@ -44,7 +44,7 @@ Here's an example of configuring error handling when creating a Mersal applicati
 
 .. code-block:: python
 
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
     from mersal.retry.error_tracking.in_memory_error_tracker import InMemoryErrorTracker
     from mersal.retry.error_handling.deadletter_queue_error_handler import DeadletterQueueErrorHandler
     from mersal.retry.fail_fast.default_fail_fast_checker import DefaultFailFastChecker
@@ -163,7 +163,7 @@ Examples
       :linenos:
       :emphasize-lines: 25-28,37-42,51-55
 
-      from mersal.app import Mersal
+      from mersal.core.app import Mersal
       from mersal.retry.error_tracking.in_memory_error_tracker import InMemoryErrorTracker
       from mersal.retry.error_handling.deadletter_queue_error_handler import DeadletterQueueErrorHandler
       from mersal.retry.fail_fast.default_fail_fast_checker import DefaultFailFastChecker

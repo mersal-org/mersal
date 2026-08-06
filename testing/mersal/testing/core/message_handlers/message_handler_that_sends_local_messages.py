@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from mersal.app import Mersal
+from mersal.core.app import Mersal
 
 __all__ = (
     "MessageHandlerThatSendsLocalMessages",

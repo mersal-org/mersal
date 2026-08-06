@@ -6,15 +6,15 @@ from mersal.activation import BuiltinHandlerActivator
 from mersal.messages import LogicalMessage
 from mersal.pipeline import ActivateHandlersStep, IncomingStepContext
 from mersal.pipeline.receive.handler_invokers import HandlerInvokers
-from mersal.transport import (
-    TransactionScope,
-)
-from mersal_testing.counter import Counter
-from mersal_testing.test_doubles import (
+from mersal.testing.core.counter import Counter
+from mersal.testing.core.test_doubles import (
     AnotherDummyMessage,
     DummyMessage,
     LogicalMessageBuilder,
     TransportMessageBuilder,
+)
+from mersal.transport import (
+    TransactionScope,
 )
 
 pytestmark = pytest.mark.anyio

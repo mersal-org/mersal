@@ -1,8 +1,8 @@
 # pyright: reportArgumentType=false
 import pytest
 
+from mersal.testing.core.test_doubles import TransactionContextTestDouble
 from mersal.transport import AmbientContext, TransactionScope
-from mersal_testing.test_doubles import TransactionContextTestDouble
 
 __all__ = ("TestTransactionScope",)
 

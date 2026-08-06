@@ -2,13 +2,13 @@ from typing import Any
 
 import pytest
 
-from mersal.transport import DefaultTransactionContext
-from mersal.transport.file_system import FileSystemTransport, FileSystemTransportConfig
-from mersal_testing.test_doubles import TransportMessageBuilder
-from mersal_testing.transport.basic_transport_tests import (
+from mersal.testing.core.test_doubles import TransportMessageBuilder
+from mersal.testing.core.transport.basic_transport_tests import (
     BasicTransportTest,
     TransportMaker,
 )
+from mersal.transport import DefaultTransactionContext
+from mersal.transport.file_system import FileSystemTransport, FileSystemTransportConfig
 
 __all__ = ("TestBasicTransportFunctionalityForFileSystemTransport",)
 

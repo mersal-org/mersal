@@ -1,7 +1,11 @@
 import pytest
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
+from mersal.testing.core.test_doubles import LogicalMessageBuilder
+from mersal.testing.core.transport.transport_decorator_helper import (
+    TransportDecoratorHelper,
+)
 from mersal.transport import (
     AmbientContext,
     DefaultTransactionContext,
@@ -13,10 +17,6 @@ from mersal.transport.in_memory.in_memory_transport_plugin import (
     InMemoryTransportPluginConfig,
 )
 from mersal.transport.transport_decorator_plugin import TransportDecoratorPlugin
-from mersal_testing.test_doubles import LogicalMessageBuilder
-from mersal_testing.transport.transport_decorator_helper import (
-    TransportDecoratorHelper,
-)
 
 __all__ = ("TestBasicSendIntegration",)
 

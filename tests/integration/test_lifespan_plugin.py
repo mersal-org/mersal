@@ -3,7 +3,7 @@ import pytest
 from anyio import sleep
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
 from mersal.lifespan.lifespan_hooks_registration_plugin import (
     LifespanHooksRegistrationPluginConfig,
 )

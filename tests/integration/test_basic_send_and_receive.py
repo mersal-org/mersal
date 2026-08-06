@@ -5,21 +5,21 @@ import pytest
 from anyio import sleep
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
 from mersal.routing.default import (
     DefaultRouterRegistrationConfig,
 )
+from mersal.testing.core.message_handlers.message_handler_that_counts import (
+    MessageHandlerThatCounts,
+)
+from mersal.testing.core.message_handlers.message_handler_that_stores_the_message import (
+    MessageHandlerThatStoresTheMessage,
+)
+from mersal.testing.core.messages import BasicMessageA
 from mersal.transport.in_memory import InMemoryNetwork
 from mersal.transport.in_memory.in_memory_transport_plugin import (
     InMemoryTransportPluginConfig,
 )
-from mersal_testing.message_handlers.message_handler_that_counts import (
-    MessageHandlerThatCounts,
-)
-from mersal_testing.message_handlers.message_handler_that_stores_the_message import (
-    MessageHandlerThatStoresTheMessage,
-)
-from mersal_testing.messages import BasicMessageA
 
 __all__ = (
     "DummyMessage",

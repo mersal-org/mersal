@@ -5,6 +5,11 @@ from mersal.pipeline import (
     OutgoingStepContext,
     SendOutgoingMessageStep,
 )
+from mersal.testing.core.counter import Counter
+from mersal.testing.core.test_doubles import (
+    LogicalMessageBuilder,
+    TransportMessageBuilder,
+)
 from mersal.transport import (
     DefaultTransactionContext,
 )
@@ -12,11 +17,6 @@ from mersal.transport.in_memory import (
     InMemoryNetwork,
     InMemoryTransport,
     InMemoryTransportConfig,
-)
-from mersal_testing.counter import Counter
-from mersal_testing.test_doubles import (
-    LogicalMessageBuilder,
-    TransportMessageBuilder,
 )
 
 __all__ = ("TestSendOutgoingMessageStep",)

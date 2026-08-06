@@ -13,7 +13,7 @@ class InvalidConfigurationError(Exception):
 
 
 if TYPE_CHECKING:
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
 
 __all__ = (
     "InvalidConfigurationError",

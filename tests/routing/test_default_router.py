@@ -1,7 +1,7 @@
 import pytest
 
 from mersal.routing.default import DefaultRouter
-from mersal_testing.test_doubles import LogicalMessageBuilder
+from mersal.testing.core.test_doubles import LogicalMessageBuilder
 
 __all__ = (
     "Message1",

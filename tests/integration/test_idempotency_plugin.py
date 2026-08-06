@@ -5,7 +5,7 @@ import pytest
 from anyio import sleep
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
 from mersal.idempotency import IdempotencyConfig
 from mersal.persistence.in_memory.in_memory_message_tracker import (
     InMemoryMessageTracker,

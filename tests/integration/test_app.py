@@ -4,18 +4,18 @@ import pytest
 from anyio import sleep
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
+from mersal.testing.core.message_handlers.message_handler_that_throws import (
+    MessageHandlerThatThrows,
+)
+from mersal.testing.core.messages import BasicMessageA, BasicMessageB
+from mersal.testing.core.test_doubles.retry.error_handler_spy import ErrorHandlerSpy
+from mersal.testing.core.test_doubles.retry.error_tracker_test_double import (
+    ErrorTrackerTestDouble,
+)
 from mersal.transport.in_memory import InMemoryNetwork
 from mersal.transport.in_memory.in_memory_transport_plugin import (
     InMemoryTransportPluginConfig,
-)
-from mersal_testing.message_handlers.message_handler_that_throws import (
-    MessageHandlerThatThrows,
-)
-from mersal_testing.messages import BasicMessageA, BasicMessageB
-from mersal_testing.test_doubles.retry.error_handler_spy import ErrorHandlerSpy
-from mersal_testing.test_doubles.retry.error_tracker_test_double import (
-    ErrorTrackerTestDouble,
 )
 
 __all__ = ("TestAppIntegration",)

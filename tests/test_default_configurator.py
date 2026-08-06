@@ -4,11 +4,11 @@ import pytest
 from anyio import sleep
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
 from mersal.configuration.standard_configurator import (
     InvalidConfigurationError,
     StandardConfigurator,
 )
+from mersal.core.app import Mersal
 from mersal.pipeline import (
     IncomingStepContext,
     PipelineInjector,

@@ -1,7 +1,7 @@
 import pytest
 
 from mersal.persistence.file_system import FileSystemSubscriptionStorage
-from mersal_testing.subscription.basic_subscription_storage_tests import (
+from mersal.testing.core.subscription.basic_subscription_storage_tests import (
     BasicSubscriptionStorageTest,
     SubscriptionStorageMaker,
 )

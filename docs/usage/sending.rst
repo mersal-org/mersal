@@ -21,11 +21,11 @@ While Mersal doesn't enforce any naming standard for messages, it does enforce t
 Sending Local Messages
 ------------------------
 
-When we setup a Mersal app with a transport, we configure the transport with a specific address. In most situations we will be using Mersal to send messages to its own configured transport. We call this local sending. It is invoked via the :py:meth:`mersal.app.Mersal.send_local` method:
+When we setup a Mersal app with a transport, we configure the transport with a specific address. In most situations we will be using Mersal to send messages to its own configured transport. We call this local sending. It is invoked via the :py:meth:`mersal.core.app.Mersal.send_local` method:
 
 .. code-block:: python
 
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
     from mersal.activation import BuiltinHandlerActivator
     from mersal.transport.in_memory import InMemoryNetwork
     from mersal.transport.in_memory.in_memory_transport_plugin import InMemoryTransportPluginConfig
@@ -49,11 +49,11 @@ When we setup a Mersal app with a transport, we configure the transport with a s
 Sending to an Arbitrary Destination
 -------------------------------------
 
-To send a message to an arbitrary destination, we need to first setup :doc:`routing <routing>` in order for Mersal to know the destination address. Once that is set, we use the :py:meth:`mersal.app.Mersal.send` method:
+To send a message to an arbitrary destination, we need to first setup :doc:`routing <routing>` in order for Mersal to know the destination address. Once that is set, we use the :py:meth:`mersal.core.app.Mersal.send` method:
 
 .. code-block:: python
 
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
     from mersal.activation import BuiltinHandlerActivator
     from mersal.transport.in_memory import InMemoryNetwork
     from mersal.transport.in_memory.in_memory_transport_plugin import InMemoryTransportPluginConfig

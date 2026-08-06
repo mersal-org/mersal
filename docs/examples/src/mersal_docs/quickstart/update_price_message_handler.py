@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from messages import PriceDecreased, UpdateProductPrice
 
 if TYPE_CHECKING:
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
 
 __all__ = ("UpdateProductPriceHandler",)
 

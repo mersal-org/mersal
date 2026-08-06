@@ -2,13 +2,13 @@ import pytest
 
 from mersal.messages import LogicalMessage
 from mersal.pipeline import DeserializeIncomingMessageStep, IncomingStepContext
-from mersal.transport import DefaultTransactionContext
-from mersal_testing.counter import Counter
-from mersal_testing.test_doubles import (
+from mersal.testing.core.counter import Counter
+from mersal.testing.core.test_doubles import (
     LogicalMessageBuilder,
     SerializerTestDouble,
     TransportMessageBuilder,
 )
+from mersal.transport import DefaultTransactionContext
 
 pytestmark = pytest.mark.anyio
 

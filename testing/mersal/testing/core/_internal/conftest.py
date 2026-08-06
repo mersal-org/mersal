@@ -8,12 +8,12 @@ from mersal.persistence.in_memory.in_memory_subscription_storage import (
 from mersal.serialization.identity_serializer.identity_object_serializer import (
     IdentitySerializer,
 )
+from mersal.testing.core.test_doubles import TransportMessageBuilder
 from mersal.transport.in_memory import (
     InMemoryNetwork,
     InMemoryTransport,
     InMemoryTransportConfig,
 )
-from mersal_testing.test_doubles import TransportMessageBuilder
 
 __all__ = (
     "anyio_backend",

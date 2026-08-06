@@ -1,5 +1,5 @@
 app
 ======
 
-.. autoclass:: mersal.app.Mersal
+.. autoclass:: mersal.core.app.Mersal
    :members:

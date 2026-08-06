@@ -22,8 +22,8 @@ from mersal.workers import WorkerFactory
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
-    from mersal.app import Mersal
     from mersal.configuration import StandardConfigurator
+    from mersal.core.app import Mersal
     from mersal.logging.config import LoggingConfig
     from mersal.pipeline.incoming_step import IncomingStep
     from mersal.pipeline.outgoing_step import OutgoingStep

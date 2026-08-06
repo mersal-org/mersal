@@ -5,8 +5,11 @@ import pytest
 from anyio import sleep
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
 from mersal.exceptions import MersalExceptionError
+from mersal.testing.core.test_doubles import (
+    UnitOfWorkTestHelper,
+)
 from mersal.transport.in_memory import InMemoryNetwork
 from mersal.transport.in_memory.in_memory_transport_plugin import (
     InMemoryTransportPluginConfig,
@@ -14,9 +17,6 @@ from mersal.transport.in_memory.in_memory_transport_plugin import (
 from mersal.unit_of_work import UnitOfWorkConfig
 from mersal.unit_of_work.plugin import UnitOfWorkPlugin
 from mersal.unit_of_work.unit_of_work_step import UnitOfWorkStep
-from mersal_testing.test_doubles import (
-    UnitOfWorkTestHelper,
-)
 
 __all__ = (
     "DummyMessage",

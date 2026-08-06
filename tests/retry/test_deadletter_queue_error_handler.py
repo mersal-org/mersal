@@ -1,6 +1,7 @@
 import pytest
 
 from mersal.retry import DeadletterQueueErrorHandler
+from mersal.testing.core.test_doubles import TransportMessageBuilder
 from mersal.transport import (
     TransactionScope,
 )
@@ -9,7 +10,6 @@ from mersal.transport.in_memory import (
     InMemoryTransport,
     InMemoryTransportConfig,
 )
-from mersal_testing.test_doubles import TransportMessageBuilder
 
 __all__ = ("TestDeadletterQueueErrorHandler",)
 

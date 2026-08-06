@@ -2,9 +2,9 @@ import pytest
 
 from mersal.activation import BuiltinHandlerActivator
 from mersal.pipeline import IncomingStepContext
+from mersal.testing.core.test_doubles import TransportMessageBuilder
 from mersal.transport import TransactionContext
 from mersal.transport.transaction_scope import TransactionScope
-from mersal_testing.test_doubles import TransportMessageBuilder
 
 __all__ = (
     "ChildDummyMessage",

@@ -8,7 +8,7 @@ from typing import Self
 import pytest
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
 from mersal.idempotency import IdempotencyConfig, MessageTracker
 from mersal.persistence.in_memory.in_memory_message_tracker import (
     InMemoryMessageTracker,

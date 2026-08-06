@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, cast
 from .anyio_worker import AnyioWorker
 
 if TYPE_CHECKING:
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
     from mersal.logging import Logger
     from mersal.pipeline import PipelineInvoker
     from mersal.transport import Transport

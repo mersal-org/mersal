@@ -6,7 +6,7 @@ import pytest
 from anyio import sleep
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
 from mersal.exceptions import MersalExceptionError
 from mersal.logging.stdlib.logger import StdlibLogger
 from mersal.messages.message_headers import MessageHeaders
@@ -18,6 +18,10 @@ from mersal.pipeline.default_pipeline import (
 )
 from mersal.pipeline.incoming_step import IncomingStep
 from mersal.pipeline.incoming_step_context import IncomingStepContext
+from mersal.testing.core.test_doubles import TransportMessageBuilder
+from mersal.testing.core.transport.transport_decorator_helper import (
+    TransportDecoratorHelper,
+)
 from mersal.transport import (
     DefaultTransactionContextWithOwningApp,
     TransactionContext,
@@ -35,10 +39,6 @@ from mersal.transport.in_memory.in_memory_transport_plugin import (
 from mersal.transport.transport_decorator_plugin import TransportDecoratorPlugin
 from mersal.types import AsyncAnyCallable
 from mersal.workers.anyio import AnyioWorker, AnyioWorkerFactory
-from mersal_testing.test_doubles import TransportMessageBuilder
-from mersal_testing.transport.transport_decorator_helper import (
-    TransportDecoratorHelper,
-)
 
 __all__ = (
     "HappyStep",

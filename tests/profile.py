@@ -1,12 +1,12 @@
 import anyio
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
+from mersal.testing.core.app_runner_helper import AppRunnerHelper
 from mersal.transport.in_memory import InMemoryNetwork
 from mersal.transport.in_memory.in_memory_transport_plugin import (
     InMemoryTransportPluginConfig,
 )
-from mersal_testing.app_runner_helper import AppRunnerHelper
 
 __all__ = (
     "DummyMessage",

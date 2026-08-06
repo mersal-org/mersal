@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from anyio import sleep
 
 if TYPE_CHECKING:
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
 
 __all__ = ("AppRunnerHelper",)
 

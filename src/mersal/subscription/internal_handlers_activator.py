@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from mersal.activation import HandlerActivator, HandlerFactory
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
     from mersal.handlers import MessageHandler
     from mersal.subscription.subscription_storage import SubscriptionStorage
     from mersal.transport import TransactionContext

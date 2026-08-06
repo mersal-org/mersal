@@ -28,7 +28,7 @@ repos:
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
   - repo: https://github.com/crate-ci/typos
-    rev: v1
+    rev: v1.49.0
     hooks:
       - id: typos
   - repo: https://github.com/python-formate/flake8-dunder-all

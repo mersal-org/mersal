@@ -37,7 +37,7 @@ The idempotency feature can be used in Mersal by passing an instance of :class:`
     # incomplete code
 
     from mersal.unit_of_work import IdempotencyConfig
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
 
     app = Mersal(idempotency=IdempotencyConfig(...))
 

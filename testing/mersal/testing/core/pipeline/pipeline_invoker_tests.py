@@ -18,9 +18,9 @@ from mersal.pipeline.incoming_step import IncomingStep
 from mersal.pipeline.outgoing_step import OutgoingStep
 from mersal.pipeline.pipeline_invoker import PipelineInvoker
 from mersal.pipeline.send.destination_addresses import DestinationAddresses
+from mersal.testing.core.test_doubles import LogicalMessageBuilder, TransportMessageBuilder
 from mersal.transport import DefaultTransactionContext
 from mersal.types import AsyncAnyCallable
-from mersal_testing.test_doubles import LogicalMessageBuilder, TransportMessageBuilder
 
 __all__ = (
     "DummyIncomingStep",

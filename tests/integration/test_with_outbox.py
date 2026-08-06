@@ -3,7 +3,7 @@ from asyncio import sleep
 import pytest
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
 from mersal.idempotency import MessageTracker
 from mersal.outbox.config import OutboxConfig
 from mersal.outbox.outbox_storage import OutboxStorage
@@ -11,20 +11,20 @@ from mersal.outbox.plugin import OutboxPlugin
 from mersal.persistence.in_memory.in_memory_message_tracker import (
     InMemoryMessageTracker,
 )
-from mersal.transport.in_memory import InMemoryNetwork
-from mersal.transport.in_memory.in_memory_transport_plugin import (
-    InMemoryTransportPluginConfig,
-)
-from mersal_testing.message_handlers.message_handler_that_counts import (
+from mersal.testing.core.message_handlers.message_handler_that_counts import (
     MessageHandlerThatCounts,
 )
-from mersal_testing.message_handlers.message_handler_that_sends_local_messages import (
+from mersal.testing.core.message_handlers.message_handler_that_sends_local_messages import (
     MessageHandlerThatSendsLocalMessages,
     MessageThatSendsMultipleMessages,
 )
-from mersal_testing.messages import BasicMessageA, BasicMessageB
-from mersal_testing.test_doubles.outbox.outbox_storage_test_double import (
+from mersal.testing.core.messages import BasicMessageA, BasicMessageB
+from mersal.testing.core.test_doubles.outbox.outbox_storage_test_double import (
     OutboxStorageTestDouble,
+)
+from mersal.transport.in_memory import InMemoryNetwork
+from mersal.transport.in_memory.in_memory_transport_plugin import (
+    InMemoryTransportPluginConfig,
 )
 
 __all__ = ("TestOutboxIntegration",)

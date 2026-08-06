@@ -1,7 +1,7 @@
 # pyright: reportWildcardImportFromLibrary=false
 import pytest
 
-from mersal_testing._internal.conftest import *
+from mersal.testing.core._internal.conftest import *
 
 __all__ = (
     "pytest_addoption",

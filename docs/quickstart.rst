@@ -79,7 +79,7 @@ Create a new file called :file:`update_price_message_handler.py`
    :language: python
 
 The catalog's handler updates the catalog prices (in production this would be a database call), then :py:meth:`publishes
-<mersal.app.Mersal.publish>` the event.
+<mersal.core.app.Mersal.publish>` the event.
 
 Now we need to update :file:`main.py` so that the catalog Mersal app can handle that message. Register the handler on the catalog's activator, inside ``main()``:
 
@@ -142,7 +142,7 @@ Wiring it together
 -------------------
 
 The catalog, notifications, and accounting apps are three separate
-:class:`Mersal <mersal.app.Mersal>` apps, each with its own queue. What lets
+:class:`Mersal <mersal.core.app.Mersal>` apps, each with its own queue. What lets
 an event published by one reach subscribers registered on the others is the
 single ``subscription_store`` that ``make_mersal_app`` was handed for all
 three - no extra wiring needed beyond passing the same store to every app.
@@ -171,8 +171,8 @@ place. In a real system, that trigger usually comes from one of:
      }
 
 * **Mersal itself** - most commonly, some other part of your app calls
-  :py:meth:`send_local <mersal.app.Mersal.send_local>` or :py:meth:`send
-  <mersal.app.Mersal.send>`, for example from an HTTP endpoint right after it
+  :py:meth:`send_local <mersal.core.app.Mersal.send_local>` or :py:meth:`send
+  <mersal.core.app.Mersal.send>`, for example from an HTTP endpoint right after it
   receives a request to change a product's price.
 
 For this quick start we'll take the third route, and we'll do it from a
@@ -268,11 +268,11 @@ What you just built
 --------------------
 
 * A **command** (``UpdateProductPrice``) sent straight to one app with
-  :py:meth:`send_local <mersal.app.Mersal.send_local>`.
+  :py:meth:`send_local <mersal.core.app.Mersal.send_local>`.
 * An **event** (``PriceDecreased``) published with
-  :py:meth:`publish <mersal.app.Mersal.publish>` and delivered to whoever is
+  :py:meth:`publish <mersal.core.app.Mersal.publish>` and delivered to whoever is
   subscribed, without the publisher knowing who that is.
-* Three independent :class:`Mersal <mersal.app.Mersal>` apps, each running
+* Three independent :class:`Mersal <mersal.core.app.Mersal>` apps, each running
   their own worker loop, coordinating only through messages - notifications
   and accounting were added without ever touching the catalog.
 

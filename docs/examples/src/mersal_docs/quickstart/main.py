@@ -10,7 +10,7 @@ from record_price_change_handler import RecordPriceChangeHandler
 from update_price_message_handler import UpdateProductPriceHandler
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
+from mersal.core.app import Mersal
 from mersal.persistence.in_memory import (
     InMemorySubscriptionStorage,
     InMemorySubscriptionStore,

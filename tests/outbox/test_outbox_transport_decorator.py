@@ -2,13 +2,13 @@ import pytest
 
 from mersal.outbox.outbox_incoming_step import OutboxIncomingStep
 from mersal.outbox.outbox_transport_decorator import OutboxTransportDecorator
-from mersal.transport.default_transaction_context import DefaultTransactionContext
-from mersal.transport.outgoing_message import OutgoingMessage
-from mersal_testing.test_doubles import (
+from mersal.testing.core.test_doubles import (
     OutboxStorageTestDouble,
     TransportMessageBuilder,
     TransportTestDouble,
 )
+from mersal.transport.default_transaction_context import DefaultTransactionContext
+from mersal.transport.outgoing_message import OutgoingMessage
 
 __all__ = ("TestOutboxTransportDecorator",)
 

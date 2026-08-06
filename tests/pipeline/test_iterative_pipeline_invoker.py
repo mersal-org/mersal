@@ -7,7 +7,7 @@ from mersal.pipeline import (
 )
 from mersal.pipeline.pipeline import IncomingPipeline, OutgoingPipeline
 from mersal.pipeline.pipeline_invoker import PipelineInvoker
-from mersal_testing.pipeline.pipeline_invoker_tests import (
+from mersal.testing.core.pipeline.pipeline_invoker_tests import (
     PipelineInvokerTestsBase,
 )
 

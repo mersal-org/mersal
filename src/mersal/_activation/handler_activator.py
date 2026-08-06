@@ -16,7 +16,7 @@ HandlerFactory: TypeAlias = Callable[
 ]
 
 if TYPE_CHECKING:
-    from mersal.app import Mersal
+    from mersal.core.app import Mersal
     from mersal.transport import TransactionContext
 
 __all__ = ("HandlerActivator",)

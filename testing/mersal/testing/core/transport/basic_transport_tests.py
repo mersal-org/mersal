@@ -5,9 +5,9 @@ import anyio
 import pytest
 
 from mersal.messages import TransportMessage
+from mersal.testing.core.test_doubles import TransportMessageBuilder
 from mersal.transport import DefaultTransactionContext, Transport
 from mersal.types.callable_types import AsyncAnyCallable
-from mersal_testing.test_doubles import TransportMessageBuilder
 
 __all__ = (
     "BasicTransportTest",

@@ -8,8 +8,8 @@ from mersal.lifespan import LifespanHandler
 from mersal.plugins import Plugin
 
 if TYPE_CHECKING:
-    from mersal.app import Mersal
     from mersal.configuration import StandardConfigurator
+    from mersal.core.app import Mersal
     from mersal.types import LifespanHook
 
 __all__ = (

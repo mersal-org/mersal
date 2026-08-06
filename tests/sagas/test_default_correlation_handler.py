@@ -6,10 +6,10 @@ from mersal.pipeline.receive.saga_handler_invoker import SagaHandlerInvoker
 from mersal.sagas.default_correlation_error_handler import (
     DefaultCorrelationErrorHandler,
 )
-from mersal.transport.default_transaction_context import DefaultTransactionContext
-from mersal_testing.test_doubles import (
+from mersal.testing.core.test_doubles import (
     LogicalMessageBuilder,
 )
+from mersal.transport.default_transaction_context import DefaultTransactionContext
 
 __all__ = ("test_default_correlation_error_handler",)
 

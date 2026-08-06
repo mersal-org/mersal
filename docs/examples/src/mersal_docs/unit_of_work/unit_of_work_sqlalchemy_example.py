@@ -1,18 +1,18 @@
 from dataclasses import dataclass
 
-from mersal_msgspec import MsgspecSerializer
-from mersal_sqlalchemy import (
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+from mersal.activation import BuiltinHandlerActivator
+from mersal.core.app import Mersal
+from mersal.msgspec import MsgspecSerializer
+from mersal.pipeline import MessageContext
+from mersal.sqlalchemy import (
     SQLAlchemyUnitOfWork,
     default_sqlalchemy_close_action,
     default_sqlalchemy_commit_action,
     default_sqlalchemy_rollback_action,
 )
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-
-from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
-from mersal.pipeline import MessageContext
 from mersal.transport.in_memory import (
     InMemoryNetwork,
     InMemoryTransportConfig,

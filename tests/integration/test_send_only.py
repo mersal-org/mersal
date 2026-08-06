@@ -1,14 +1,14 @@
 import pytest
 
 from mersal.activation import BuiltinHandlerActivator
-from mersal.app import Mersal
 from mersal.configuration import StandardConfigurator
+from mersal.core.app import Mersal
 from mersal.plugins import Plugin
+from mersal.testing.core.test_doubles import LogicalMessageBuilder
 from mersal.transport.in_memory import InMemoryNetwork
 from mersal.transport.in_memory.in_memory_transport_plugin import (
     InMemoryTransportPluginConfig,
 )
-from mersal_testing.test_doubles import LogicalMessageBuilder
 
 __all__ = ("TestSendOnlyIntegration",)
 

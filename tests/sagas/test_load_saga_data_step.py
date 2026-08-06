@@ -21,12 +21,12 @@ from mersal.pipeline.receive.saga_handler_invoker import SagaHandlerInvoker
 from mersal.sagas import CorrelationProperty, SagaBase, SagaData
 from mersal.sagas.correlator import Correlator
 from mersal.sagas.load_saga_data_step import LoadSagaDataStep
-from mersal.transport import DefaultTransactionContext
-from mersal_testing.counter import Counter, CounterWithAction
-from mersal_testing.test_doubles import (
+from mersal.testing.core.counter import Counter, CounterWithAction
+from mersal.testing.core.test_doubles import (
     LogicalMessageBuilder,
     TransportMessageBuilder,
 )
+from mersal.transport import DefaultTransactionContext
 
 pytestmark = pytest.mark.anyio
 
