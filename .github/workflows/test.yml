@@ -57,7 +57,7 @@ jobs:
           python-version: ${{ inputs.python-version }}
 
       - name: Install mise
-        uses: jdx/mise-action@v4.2.3
+        uses: jdx/mise-action@v4.2.4
         with:
           install: false
           cache: true
