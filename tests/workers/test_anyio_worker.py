@@ -288,6 +288,42 @@ class TestAnyioWorker:
 
         assert results == ["slow", "fast"]
 
+    async def test_semaphore_permit_leaks_when_transaction_context_enter_raises(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        pipeline_invoker: RecursivePipelineInvoker,
+        incoming_pipeline: DefaultIncomingPipeline,
+    ):
+        network = InMemoryNetwork()
+        queue_address = "test-queue"
+        transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
+        incoming_pipeline.append(HappyStep())
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=1)
+        subject = factory.create_worker("Worker-1")
+
+        original_aenter = DefaultTransactionContextWithOwningApp.__aenter__
+        calls = 0
+
+        async def flaky_aenter(self_):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                raise MersalExceptionError()
+            return await original_aenter(self_)
+
+        monkeypatch.setattr(DefaultTransactionContextWithOwningApp, "__aenter__", flaky_aenter)
+
+        network.deliver(queue_address, TransportMessageBuilder.build())
+
+        async with subject:
+            await sleep(0.3)
+
+        # The permit acquired before the first (failing) __aenter__ call is never
+        # released, so on the next loop iteration the worker blocks forever trying
+        # to acquire a permit. The message delivered above is never received or
+        # processed even though a permit should have been available for it.
+        assert network.get_next(queue_address) is None
+
     async def test_transaction_context_closed_for_each_concurrent_message(
         self,
         pipeline_invoker: RecursivePipelineInvoker,
