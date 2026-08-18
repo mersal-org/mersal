@@ -166,3 +166,70 @@ class TestRunApps:
             stop.set()
 
         assert handler2.count == 1
+
+    async def test_liveness_watcher_reports_unresponsive_app(self):
+        network = InMemoryNetwork()
+        handler = MessageHandlerThatCounts()
+        app = _make_app("m1", network, handler, BasicMessageA)
+
+        async def hanging_receive(_):
+            await anyio.sleep(3600)
+
+        # Simulate a wedged worker: the receive loop blocks forever, so the
+        # heartbeat stops updating.
+        app.transport.receive = hanging_receive  # pyright: ignore[reportAttributeAccessIssue]
+        stop = anyio.Event()
+        fired = anyio.Event()
+        reports = []
+
+        async def on_unresponsive(app_: Mersal, age: float) -> None:
+            reports.append((app_, age))
+            fired.set()
+
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(
+                partial(
+                    run_apps,
+                    [app],
+                    stop=stop,
+                    handle_signals=False,
+                    liveness_timeout=0.2,
+                    liveness_check_interval=0.05,
+                    on_unresponsive=on_unresponsive,
+                )
+            )
+            with anyio.fail_after(5):
+                await fired.wait()
+            stop.set()
+
+        assert len(reports) == 1
+        reported_app, age = reports[0]
+        assert reported_app is app
+        assert age > 0.2
+
+    async def test_liveness_watcher_does_not_report_idle_responsive_app(self):
+        network = InMemoryNetwork()
+        handler = MessageHandlerThatCounts()
+        app = _make_app("m1", network, handler, BasicMessageA)
+        stop = anyio.Event()
+        reports = []
+
+        async def on_unresponsive(app_: Mersal, age: float) -> None:
+            reports.append((app_, age))
+
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(
+                partial(
+                    run_apps,
+                    [app],
+                    stop=stop,
+                    handle_signals=False,
+                    liveness_timeout=2.0,
+                    liveness_check_interval=0.05,
+                    on_unresponsive=on_unresponsive,
+                )
+            )
+            await anyio.sleep(0.5)
+            stop.set()
+
+        assert reports == []

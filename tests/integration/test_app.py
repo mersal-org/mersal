@@ -1,10 +1,13 @@
 import uuid
+from typing import Any
 
+import anyio
 import pytest
 from anyio import sleep
 
 from mersal.activation import BuiltinHandlerActivator
 from mersal.core.app import Mersal
+from mersal.plugins import generic_registration_plugin
 from mersal.testing.core.message_handlers.message_handler_that_throws import (
     MessageHandlerThatThrows,
 )
@@ -17,6 +20,7 @@ from mersal.transport.in_memory import InMemoryNetwork
 from mersal.transport.in_memory.in_memory_transport_plugin import (
     InMemoryTransportPluginConfig,
 )
+from mersal.workers import WorkerBackoffStrategy
 
 __all__ = ("TestAppIntegration",)
 
@@ -94,3 +98,87 @@ class TestAppIntegration:
 
         assert shutdown_calls == [True]
         assert app._exit_stack is None
+
+    async def test_max_parallelism_is_wired_through_app_configuration(self):
+        network = InMemoryNetwork()
+        activator = BuiltinHandlerActivator()
+        in_flight = 0
+        all_running = anyio.Event()
+
+        class ConcurrencyProbeHandler:
+            async def __call__(self, message: Any) -> None:
+                nonlocal in_flight
+                in_flight += 1
+                if in_flight == 3:
+                    all_running.set()
+                # Park until all three handlers are in flight; with a
+                # parallelism of 1 they would run sequentially and this
+                # would time out instead.
+                with anyio.move_on_after(3):
+                    await all_running.wait()
+
+        handler = ConcurrencyProbeHandler()
+        activator.register(BasicMessageA, lambda _, __: handler)
+        plugins = [
+            InMemoryTransportPluginConfig(network, "test-queue").plugin,
+        ]
+        app = Mersal(
+            "m1",
+            activator,
+            plugins=plugins,
+            max_parallelism=3,
+        )
+        await app.start()
+        for _ in range(3):
+            await app.send_local(BasicMessageA())
+        with anyio.move_on_after(3):
+            await all_running.wait()
+        await app.stop()
+
+        assert all_running.is_set()
+
+    async def test_stop_grace_period_is_wired_through_app_configuration(self):
+        network = InMemoryNetwork()
+        activator = BuiltinHandlerActivator()
+        plugins = [
+            InMemoryTransportPluginConfig(network, "test-queue").plugin,
+        ]
+        app = Mersal(
+            "m1",
+            activator,
+            plugins=plugins,
+            stop_grace_period=7.5,
+        )
+
+        assert app.worker is not None
+        assert app.worker._stop_grace_period == 7.5  # pyright: ignore[reportAttributeAccessIssue]
+
+    async def test_custom_backoff_strategy_is_used_when_registered(self):
+        network = InMemoryNetwork()
+        activator = BuiltinHandlerActivator()
+
+        class BackoffSpy:
+            def __init__(self) -> None:
+                self.no_message_count = 0
+
+            async def wait_no_message(self) -> None:
+                self.no_message_count += 1
+                await sleep(0.001)
+
+            async def wait_error(self) -> None:
+                await sleep(0.001)
+
+            def reset(self) -> None:
+                pass
+
+        spy = BackoffSpy()
+        plugins = [
+            InMemoryTransportPluginConfig(network, "test-queue").plugin,
+            generic_registration_plugin(spy, WorkerBackoffStrategy),
+        ]
+        app = Mersal("m1", activator, plugins=plugins)
+        await app.start()
+        await sleep(0.05)
+        await app.stop()
+
+        assert spy.no_message_count > 0

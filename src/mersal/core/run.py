@@ -1,9 +1,11 @@
 import signal
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from typing import Any
 
 import anyio
 
 from mersal.core.app import Mersal
+from mersal.utils.sync import AsyncCallable
 
 __all__ = ("run_apps",)
 
@@ -15,6 +17,9 @@ async def run_apps(
     handle_signals: bool = True,
     restart_on_crash: bool = True,
     restart_backoff: float = 1.0,
+    liveness_timeout: float | None = None,
+    liveness_check_interval: float | None = None,
+    on_unresponsive: Callable[[Mersal, float], Any] | None = None,
 ) -> None:
     """Run multiple Mersal apps concurrently until stopped.
 
@@ -25,6 +30,14 @@ async def run_apps(
 
     A crash inside an app (e.g. a failing startup hook) tears down only that
     app; it is re-entered after a backoff while the others keep running.
+
+    With a liveness timeout set, a watcher checks each running app's worker
+    heartbeat, which the receive loop updates once per iteration. An app
+    whose heartbeat goes stale (wedged parallelism limiter, transport stuck
+    past its bounded-receive contract, handler pool deadlocked) is reported
+    via an "app.unresponsive" warning log and the optional callback; an
+    "app.responsive" log follows if it recovers. Both fire on the transition,
+    not on every check.
 
     Args:
         apps: the Mersal apps to run.
@@ -40,6 +53,15 @@ async def run_apps(
             When False the first crash cancels the remaining apps and the
             exception propagates to the caller.
         restart_backoff: seconds to wait before re-entering a crashed app.
+        liveness_timeout: heartbeat age in seconds beyond which an app is
+            reported unresponsive; None disables the watcher. Must exceed
+            the transport's receive bound plus the backoff strategy's
+            longest delay, or idle apps will be falsely reported.
+        liveness_check_interval: seconds between liveness checks; defaults
+            to a quarter of the timeout.
+        on_unresponsive: sync or async callable invoked with (app,
+            heartbeat_age) when an app becomes unresponsive. Exceptions it
+            raises are logged, not propagated.
     """
     stop_event = stop if stop is not None else anyio.Event()
 
@@ -65,9 +87,38 @@ async def run_apps(
                 else:
                     stop_event.set()
 
+    async def watch_liveness(timeout: float) -> None:
+        interval = liveness_check_interval if liveness_check_interval is not None else timeout / 4
+        callback = AsyncCallable(on_unresponsive) if on_unresponsive is not None else None
+        unresponsive: set[int] = set()
+        while True:
+            await anyio.sleep(interval)
+            for app in apps:
+                worker = app.worker
+                if worker is None or not worker.running:
+                    unresponsive.discard(id(app))
+                    continue
+                age = worker.heartbeat_age
+                if age is None:
+                    continue
+                if age > timeout:
+                    if id(app) not in unresponsive:
+                        unresponsive.add(id(app))
+                        app.logger.warning("app.unresponsive", app=app.name, heartbeat_age=age)
+                        if callback is not None:
+                            try:
+                                await callback(app, age)
+                            except Exception:
+                                app.logger.exception("app.unresponsive.callback.error", app=app.name)
+                elif id(app) in unresponsive:
+                    unresponsive.discard(id(app))
+                    app.logger.info("app.responsive", app=app.name, heartbeat_age=age)
+
     async with anyio.create_task_group() as task_group:
         if handle_signals:
             _ = task_group.start_soon(watch_signals, task_group.cancel_scope)
+        if liveness_timeout is not None:
+            _ = task_group.start_soon(watch_liveness, liveness_timeout)
         try:
             async with anyio.create_task_group() as apps_task_group:
                 for app in apps:

@@ -8,6 +8,11 @@ class Worker(Protocol):
     name: str
     running: bool
 
+    @property
+    def heartbeat_age(self) -> float | None:
+        """Seconds since the receive loop last made progress, or None before the first beat."""
+        ...
+
     async def __call__(self) -> None: ...
 
     async def stop(self) -> None: ...

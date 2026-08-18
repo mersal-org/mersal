@@ -38,9 +38,11 @@ from mersal.transport.in_memory.in_memory_transport_plugin import (
 )
 from mersal.transport.transport_decorator_plugin import TransportDecoratorPlugin
 from mersal.types import AsyncAnyCallable
+from mersal.workers import DefaultWorkerBackoffStrategy
 from mersal.workers.anyio import AnyioWorker, AnyioWorkerFactory
 
 __all__ = (
+    "BackoffStrategySpy",
     "HappyStep",
     "TestAnyioWorker",
     "ThrowingStep",
@@ -61,6 +63,26 @@ class HappyStep(IncomingStep):
     async def __call__(self, context: IncomingStepContext, next_step: AsyncAnyCallable):
         transaction_context: TransactionContext = context.load(TransactionContext)
         transaction_context.set_result(True, True)
+
+
+class BackoffStrategySpy:
+    def __init__(self) -> None:
+        self.no_message_count = 0
+        self.error_count = 0
+        self.reset_count = 0
+        self.reset_event = anyio.Event()
+
+    async def wait_no_message(self) -> None:
+        self.no_message_count += 1
+        await sleep(0.001)
+
+    async def wait_error(self) -> None:
+        self.error_count += 1
+        await sleep(0.001)
+
+    def reset(self) -> None:
+        self.reset_count += 1
+        self.reset_event.set()
 
 
 class VariableSpeedStep(IncomingStep):
@@ -298,7 +320,13 @@ class TestAnyioWorker:
         queue_address = "test-queue"
         transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
         incoming_pipeline.append(HappyStep())
-        factory = AnyioWorkerFactory(transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=1)
+        factory = AnyioWorkerFactory(
+            transport,
+            pipeline_invoker,
+            logger=StdlibLogger(),
+            max_parallelism=1,
+            backoff_strategy=DefaultWorkerBackoffStrategy(delays=[0.01], error_delays=[0.01]),
+        )
         subject = factory.create_worker("Worker-1")
 
         original_aenter = DefaultTransactionContextWithOwningApp.__aenter__
@@ -356,3 +384,136 @@ class TestAnyioWorker:
         # close() should have been called for each message's transaction context
         # plus the empty-receive iterations that also close their contexts
         assert len(close_calls) >= 2
+
+    async def test_idle_worker_waits_via_backoff_strategy(self, pipeline_invoker: RecursivePipelineInvoker):
+        network = InMemoryNetwork()
+        queue_address = "test-queue"
+        transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
+        spy = BackoffStrategySpy()
+        factory = AnyioWorkerFactory(
+            transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=1, backoff_strategy=spy
+        )
+        subject = factory.create_worker("Worker-1")
+
+        async with subject:
+            await sleep(0.05)
+
+        assert spy.no_message_count > 1
+        assert spy.reset_count == 0
+
+    async def test_backoff_resets_when_message_is_received(
+        self,
+        pipeline_invoker: RecursivePipelineInvoker,
+        incoming_pipeline: DefaultIncomingPipeline,
+    ):
+        network = InMemoryNetwork()
+        queue_address = "test-queue"
+        transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
+        incoming_pipeline.append(HappyStep())
+        spy = BackoffStrategySpy()
+        factory = AnyioWorkerFactory(
+            transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=1, backoff_strategy=spy
+        )
+        subject = factory.create_worker("Worker-1")
+
+        network.deliver(queue_address, TransportMessageBuilder.build())
+        async with subject:
+            with anyio.fail_after(5):
+                await spy.reset_event.wait()
+
+        assert spy.reset_count >= 1
+
+    async def test_heartbeat_updates_while_idle(self, pipeline_invoker: RecursivePipelineInvoker):
+        network = InMemoryNetwork()
+        queue_address = "test-queue"
+        transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
+        factory = AnyioWorkerFactory(
+            transport,
+            pipeline_invoker,
+            logger=StdlibLogger(),
+            max_parallelism=1,
+            backoff_strategy=DefaultWorkerBackoffStrategy(delays=[0.01]),
+        )
+        subject = factory.create_worker("Worker-1")
+
+        assert subject.heartbeat_age is None
+        async with subject:
+            await sleep(0.3)
+            age = subject.heartbeat_age
+
+        assert age is not None
+        assert age < 0.15
+
+    async def test_transport_receive_errors_use_error_backoff(self, pipeline_invoker: RecursivePipelineInvoker):
+        network = InMemoryNetwork()
+        queue_address = "test-queue"
+        transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
+
+        async def failing_receive(_):
+            raise MersalExceptionError()
+
+        transport.receive = failing_receive  # pyright: ignore[reportAttributeAccessIssue]
+        spy = BackoffStrategySpy()
+        factory = AnyioWorkerFactory(
+            transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=1, backoff_strategy=spy
+        )
+        subject = factory.create_worker("Worker-1")
+
+        async with subject:
+            await sleep(0.05)
+
+        assert spy.error_count > 1
+        assert spy.no_message_count == 0
+
+    async def test_stop_grace_period_bounds_shutdown_with_stuck_handler(
+        self,
+        pipeline_invoker: RecursivePipelineInvoker,
+        incoming_pipeline: DefaultIncomingPipeline,
+    ):
+        network = InMemoryNetwork()
+        queue_address = "test-queue"
+        transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
+        handler_started = anyio.Event()
+
+        class StuckStep(IncomingStep):
+            async def __call__(self, context: IncomingStepContext, next_step: AsyncAnyCallable):
+                transaction_context: TransactionContext = context.load(TransactionContext)
+                transaction_context.set_result(True, True)
+                handler_started.set()
+                await sleep(3600)
+
+        incoming_pipeline.append(StuckStep())
+        factory = AnyioWorkerFactory(
+            transport,
+            pipeline_invoker,
+            logger=StdlibLogger(),
+            max_parallelism=1,
+            stop_grace_period=0.2,
+        )
+        subject = factory.create_worker("Worker-1")
+
+        network.deliver(queue_address, TransportMessageBuilder.build())
+        # Without the grace period the shielded stuck handler would block
+        # __aexit__ indefinitely; the deadline cancels it after 0.2s.
+        with anyio.fail_after(5):
+            async with subject:
+                await handler_started.wait()
+
+    async def test_heartbeat_goes_stale_when_receive_blocks(self, pipeline_invoker: RecursivePipelineInvoker):
+        network = InMemoryNetwork()
+        queue_address = "test-queue"
+        transport = InMemoryTransport(InMemoryTransportConfig(network, queue_address))
+
+        async def hanging_receive(_):
+            await sleep(3600)
+
+        transport.receive = hanging_receive  # pyright: ignore[reportAttributeAccessIssue]
+        factory = AnyioWorkerFactory(transport, pipeline_invoker, logger=StdlibLogger(), max_parallelism=1)
+        subject = factory.create_worker("Worker-1")
+
+        async with subject:
+            await sleep(0.3)
+            age = subject.heartbeat_age
+
+        assert age is not None
+        assert age > 0.2

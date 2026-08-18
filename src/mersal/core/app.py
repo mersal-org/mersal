@@ -96,6 +96,7 @@ class Mersal:
         pdb_on_exception: bool | None = None,
         message_id_generator: MessageIdGenerator | None = None,
         max_parallelism: int = 1,
+        stop_grace_period: float | None = None,
         logging_config: LoggingConfig | None = None,
         debug: bool = False,
         send_only: bool = False,
@@ -131,6 +132,10 @@ class Mersal:
             pdb_on_exception: bool | None = None,
             message_id_generator: MessageIdGenerator | None = None,
             max_parallelism: number of messages to be handled in parallel.
+            stop_grace_period: seconds in-flight message handlers are given to
+                finish during shutdown before being cancelled (their
+                transaction contexts are still closed). None (the default)
+                waits for them indefinitely.
             logging_config: configuration for the logging system.
             debug: controls debug mode.
             send_only: marks this app as send-only - it will never receive messages,
@@ -221,7 +226,13 @@ class Mersal:
 
         self.handler_activator.app = self
         self.configurator.mersal = self
-        plugins.append(DefaultPlugin(pdb_on_exception=bool(pdb_on_exception), max_parallelism=max_parallelism))
+        plugins.append(
+            DefaultPlugin(
+                pdb_on_exception=bool(pdb_on_exception),
+                max_parallelism=max_parallelism,
+                stop_grace_period=stop_grace_period,
+            )
+        )
         for plugin in plugins:
             plugin(self.configurator)
 

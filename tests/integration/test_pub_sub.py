@@ -99,18 +99,18 @@ class TestPubSubIntegration:
         await subscriber_app.start()
 
         await subscriber_app.subscribe(DummyMessage)
-        await sleep(0.1)
+        await sleep(0.5)
 
         await owner_app.publish(DummyMessage())
-        await sleep(0.1)
+        await sleep(0.5)
 
         assert handler.calls == 1
 
         await subscriber_app.unsubscribe(DummyMessage)
-        await sleep(0.1)
+        await sleep(0.5)
 
         await owner_app.publish(DummyMessage())
-        await sleep(0.1)
+        await sleep(0.5)
 
         assert handler.calls == 1
 

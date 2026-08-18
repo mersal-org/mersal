@@ -19,4 +19,13 @@ class Transport(Protocol):
         transaction_context: TransactionContext,
     ) -> None: ...
 
-    async def receive(self, transaction_context: TransactionContext) -> TransportMessage | None: ...
+    async def receive(self, transaction_context: TransactionContext) -> TransportMessage | None:
+        """Return the next incoming message, or None if none is available.
+
+        Implementations may wait internally for a message but must return
+        (a message or None) within a bounded time rather than blocking
+        indefinitely: the worker treats each return as a liveness signal,
+        and idle waiting is the job of the worker's backoff strategy, not
+        the transport.
+        """
+        ...

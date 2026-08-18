@@ -50,16 +50,17 @@ from mersal.serialization import (
 from mersal.subscription import InternalHandlersActivator, SubscriptionStorage
 from mersal.topic import DefaultTopicNameConvention, TopicNameConvention
 from mersal.transport import Transport
-from mersal.workers import WorkerFactory
+from mersal.workers import DefaultWorkerBackoffStrategy, WorkerBackoffStrategy, WorkerFactory
 from mersal.workers.anyio import AnyioWorkerFactory
 
 __all__ = ("DefaultPlugin",)
 
 
 class DefaultPlugin(Plugin):
-    def __init__(self, pdb_on_exception: bool, max_parallelism: int) -> None:
+    def __init__(self, pdb_on_exception: bool, max_parallelism: int, stop_grace_period: float | None = None) -> None:
         self.pdb_on_exception = pdb_on_exception
         self.max_parallelism = max_parallelism
+        self.stop_grace_period = stop_grace_period
 
     def __call__(self, configurator: StandardConfigurator) -> None:
         self.configurator = configurator
@@ -164,11 +165,19 @@ class DefaultPlugin(Plugin):
         self._register_default_dependency_if_needed(TopicNameConvention, lambda _: DefaultTopicNameConvention())
 
         self._register_default_dependency_if_needed(
+            WorkerBackoffStrategy,
+            lambda _: DefaultWorkerBackoffStrategy(),
+        )
+
+        self._register_default_dependency_if_needed(
             WorkerFactory,
             lambda config: AnyioWorkerFactory(
                 transport=config.get(Transport),  # type: ignore[type-abstract]
                 pipeline_invoker=config.get(PipelineInvoker),  # type: ignore[type-abstract]
                 logger=config.get(Logger),  # type: ignore[type-abstract]
+                max_parallelism=self.max_parallelism,
+                backoff_strategy=config.get(WorkerBackoffStrategy),  # type: ignore[type-abstract]
+                stop_grace_period=self.stop_grace_period,
             ),
         )
 
