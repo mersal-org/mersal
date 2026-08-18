@@ -35,7 +35,7 @@ The unit of work pattern can be used in Mersal by passing an instance of :class:
     app = Mersal(unit_of_work=UnitOfWorkConfig(...))
 
 
-The config requires several inputs, how to create the unit of work object, what to do on commit/rollback/close. The examples below will show a usecase of :class:`SQLAlchemyUnitOfWork <mersal.sqlalchemy.sqlalchemy_unit_of_work.SQLAlchemyUnitOfWork>` that is provided and ready to be used.
+The config requires several inputs, how to create the unit of work object, what to do on commit/rollback/close. The examples below will show a usecase of :class:`SQLAlchemyUnitOfWork <mersal_sqlalchemy.sqlalchemy_unit_of_work.SQLAlchemyUnitOfWork>` that is provided and ready to be used.
 
 Accessing the unit of work
 """"""""""""""""""""""""""""

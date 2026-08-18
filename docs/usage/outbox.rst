@@ -37,7 +37,7 @@ The outbox pattern can be used in Mersal by passing an instance of :class:`Outbo
 
 Provided implementation of  ``OutboxStorage``:
 
-* :class:`SQLAlchemyOutboxStorage <mersal.sqlalchemy.sqlalchemy_outbox_storage.SQLAlchemyOutboxStorage>`
+* :class:`SQLAlchemyOutboxStorage <mersal_sqlalchemy.sqlalchemy_outbox_storage.SQLAlchemyOutboxStorage>`
 * :class:`InMemoryOutboxStorage <.outbox.in_memory.InMemoryOutboxStorage>`, only used for testing since it has no concept of a transaction.
 
 When using the outbox feature, it's important to not commit nor close the database transaction within the message handlers. That action should be handled by the outbox storage or during the :doc:`unit of work </usage/unit_of_work>` step.

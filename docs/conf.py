@@ -70,6 +70,7 @@ nitpick_ignore: list[tuple[str, str]] = [
     ("py:class", "InMemoryNetwork"),
     ("py:class", "AsyncSession"),
     ("py:class", "async_sessionmaker"),
+    ("py:class", "TransportMessage"),
     # TODO: no reference/*.rst page documents these modules yet
     ("py:class", "mersal.transport.file_system.FileSystemTransport"),
     ("py:class", "mersal.transport.base_transport.BaseTransport"),
