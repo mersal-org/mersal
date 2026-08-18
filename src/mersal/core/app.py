@@ -253,12 +253,13 @@ class Mersal:
         await self._exit_stack.enter_async_context(self.worker)
 
     async def stop(self) -> None:
-        if self._exit_stack:
-            await self._exit_stack.aclose()
-
-        self._exit_stack = None
-        for hook in self.on_shutdown_hooks:
-            await AsyncCallable(hook)()
+        try:
+            if self._exit_stack:
+                await self._exit_stack.aclose()
+        finally:
+            self._exit_stack = None
+            for hook in self.on_shutdown_hooks:
+                await AsyncCallable(hook)()
 
     async def __aenter__(self) -> Self:
         await self.start()

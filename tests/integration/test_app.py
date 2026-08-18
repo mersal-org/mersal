@@ -62,3 +62,35 @@ class TestAppIntegration:
         await sleep(1)
         assert len(error_tracker._registered_errors_spy[str(message1_id)]) == 1
         assert len(error_tracker._registered_errors_spy[str(message2_id)]) == 5
+
+    async def test_stop_runs_shutdown_hooks_when_worker_teardown_raises(self):
+        network = InMemoryNetwork()
+        activator = BuiltinHandlerActivator()
+        shutdown_calls: list[bool] = []
+
+        async def on_shutdown() -> None:
+            shutdown_calls.append(True)
+
+        plugins = [
+            InMemoryTransportPluginConfig(network, "test-queue").plugin,
+        ]
+        app = Mersal(
+            "m1",
+            activator,
+            plugins=plugins,
+            on_shutdown_hooks=[on_shutdown],
+        )
+        await app.start()
+
+        async def failing_teardown() -> None:
+            raise RuntimeError("teardown failure")
+
+        if app._exit_stack is None:
+            raise AssertionError("exit stack should be set after start")
+        app._exit_stack.push_async_callback(failing_teardown)
+
+        with pytest.raises(RuntimeError, match="teardown failure"):
+            await app.stop()
+
+        assert shutdown_calls == [True]
+        assert app._exit_stack is None
