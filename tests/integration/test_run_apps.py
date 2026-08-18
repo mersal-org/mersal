@@ -207,6 +207,67 @@ class TestRunApps:
         assert reported_app is app
         assert age > 0.2
 
+    async def test_ready_event_set_once_all_apps_started(self):
+        network = InMemoryNetwork()
+        handler1 = MessageHandlerThatCounts()
+        handler2 = MessageHandlerThatCounts()
+        app1 = _make_app("m1", network, handler1, BasicMessageA)
+        app2 = _make_app("m2", network, handler2, BasicMessageB)
+        stop = anyio.Event()
+        ready = anyio.Event()
+
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(partial(run_apps, [app1, app2], stop=stop, ready=ready, handle_signals=False))
+            with anyio.fail_after(5):
+                await ready.wait()
+            await app1.send_local(BasicMessageA())
+            await app2.send_local(BasicMessageB())
+            await anyio.sleep(0.5)
+            stop.set()
+
+        assert handler1.count == 1
+        assert handler2.count == 1
+
+    async def test_ready_event_set_immediately_when_no_apps(self):
+        stop = anyio.Event()
+        ready = anyio.Event()
+
+        await run_apps([], stop=stop, ready=ready, handle_signals=False)
+
+        assert ready.is_set()
+
+    async def test_ready_event_waits_for_slowest_app_to_start(self):
+        network = InMemoryNetwork()
+        handler1 = MessageHandlerThatCounts()
+        handler2 = MessageHandlerThatCounts()
+        hook = FlakyStartupHook(failures=2)
+        app1 = _make_app("m1", network, handler1, BasicMessageA, on_startup_hooks=[hook])
+        app2 = _make_app("m2", network, handler2, BasicMessageB)
+        stop = anyio.Event()
+        ready = anyio.Event()
+
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(
+                partial(
+                    run_apps,
+                    [app1, app2],
+                    stop=stop,
+                    ready=ready,
+                    handle_signals=False,
+                    restart_backoff=0.2,
+                )
+            )
+            # app2 starts immediately; app1 keeps failing startup for a
+            # couple of retries, so ready must not fire until it succeeds.
+            with anyio.fail_after(5):
+                await hook.crashed.wait()
+            assert not ready.is_set()
+            with anyio.fail_after(5):
+                await ready.wait()
+            stop.set()
+
+        assert hook.calls == 3
+
     async def test_liveness_watcher_does_not_report_idle_responsive_app(self):
         network = InMemoryNetwork()
         handler = MessageHandlerThatCounts()

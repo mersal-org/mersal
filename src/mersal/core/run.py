@@ -14,6 +14,7 @@ async def run_apps(
     apps: Sequence[Mersal],
     *,
     stop: anyio.Event | None = None,
+    ready: anyio.Event | None = None,
     handle_signals: bool = True,
     restart_on_crash: bool = True,
     restart_backoff: float = 1.0,
@@ -44,6 +45,10 @@ async def run_apps(
         stop: event that triggers a graceful shutdown when set. Provide one
             to control shutdown externally (e.g. from tests); if omitted an
             internal event is created and shutdown is driven by signals.
+        ready: event set once every app has completed its first successful
+            start. Provide one to block a caller (e.g. a surrounding
+            lifespan) until all apps are actually up; set immediately if
+            ``apps`` is empty. Not re-set on a later restart.
         handle_signals: trap SIGTERM/SIGINT and set the stop event on the
             first signal; a second signal cancels the remaining shutdown.
             Requires running in the main thread of a platform with signal
@@ -64,11 +69,22 @@ async def run_apps(
             raises are logged, not propagated.
     """
     stop_event = stop if stop is not None else anyio.Event()
+    started = 0
+
+    if ready is not None and not apps:
+        ready.set()
 
     async def run_one(app: Mersal) -> None:
+        nonlocal started
+        first_start = True
         while True:
             try:
                 async with app:
+                    if first_start:
+                        first_start = False
+                        started += 1
+                        if ready is not None and started == len(apps):
+                            ready.set()
                     await stop_event.wait()
                 return
             except Exception:
