@@ -81,6 +81,13 @@ class AnyioWorker:
             await self._exit_stack.aclose()
 
     async def __aenter__(self) -> Self:
+        self.logger.info(
+            "worker.configured",
+            worker=self.name,
+            max_parallelism=self._max_parallelism,
+            stop_grace_period=self._stop_grace_period,
+            backoff_strategy=type(self._backoff_strategy).__name__,
+        )
         self._exit_stack = AsyncExitStack()
         self._parallelism_limiter = anyio.Semaphore(self._max_parallelism)
         self._processing_tg = anyio.create_task_group()
