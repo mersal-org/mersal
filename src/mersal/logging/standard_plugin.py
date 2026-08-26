@@ -15,6 +15,7 @@ from mersal.pipeline import (
     PipelineInvoker,
 )
 from mersal.pipeline.send.destination_addresses import DestinationAddresses
+from mersal.pipeline.step_context import RETRY_ATTEMPTS_KEY, STEP_EXECUTION_COUNT_KEY
 from mersal.plugins import Plugin
 from mersal.retry import ErrorHandler
 from mersal.workers import WorkerFactory
@@ -85,6 +86,8 @@ class _LoggingIncomingStep:
         transport_message = context.load(TransportMessage)
         message_label = transport_message.message_label if transport_message else "unknown"  # type: ignore[truthy-bool]
 
+        context.save_keys(STEP_EXECUTION_COUNT_KEY, (context.load_keys(STEP_EXECUTION_COUNT_KEY) or 0) + 1)
+
         logger = self._logger.bind(step=step_name, message=message_label, pipeline="incoming")
 
         logger.debug("step.execute")
@@ -115,6 +118,8 @@ class _LoggingOutgoingStep:
 
         destinations = context.load(DestinationAddresses)
         dest_str = ",".join(destinations) if destinations else "unknown"  # type: ignore[truthy-bool]
+
+        context.save_keys(STEP_EXECUTION_COUNT_KEY, (context.load_keys(STEP_EXECUTION_COUNT_KEY) or 0) + 1)
 
         logger = self._logger.bind(step=step_name, message=message_label, destinations=dest_str, pipeline="outgoing")
 
@@ -187,17 +192,30 @@ class _LoggingPipelineInvoker:
         logger = self._logger.bind(**ctx)
 
         with self._pipeline_context(**ctx):
-            logger.info("pipeline.invoke.start")
+            logger.debug("pipeline.invoke.start")
             start = time.perf_counter()
 
+            outcome = "success"
             try:
                 await self._invoker(context)
-                elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
-                logger.info("pipeline.invoke.complete", elapsed_ms=elapsed_ms)
             except Exception:
-                elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
-                logger.error("pipeline.invoke.error", elapsed_ms=elapsed_ms)
+                outcome = "error"
                 raise
+            finally:
+                elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
+                step_count = context.load_keys(STEP_EXECUTION_COUNT_KEY) or 0
+                retry_attempts = context.load_keys(RETRY_ATTEMPTS_KEY)
+
+                log = logger.error if outcome == "error" else logger.info
+                log(
+                    "pipeline.invoke",
+                    canonical=True,
+                    log_type="canonical-log-line",
+                    outcome=outcome,
+                    elapsed_ms=elapsed_ms,
+                    step_count=step_count,
+                    **({"retry_attempts": retry_attempts} if retry_attempts is not None else {}),
+                )
 
 
 # --- Error handler decorator ---

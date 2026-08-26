@@ -56,6 +56,40 @@ class TestSetDefaultHeadersStep:
         assert message.headers.get("message_id") == str(message_id)
         assert counter.total == 1
 
+    async def test_setting_default_message_type_header(self):
+        subject = SetDefaultHeadersStep()
+        message = LogicalMessage(body={}, headers=MessageHeaders())
+
+        transaction_context = DefaultTransactionContext()
+        destination_addresses = DestinationAddresses({"moon", "sun"})
+        context = OutgoingStepContext(
+            message=message,
+            transaction_context=transaction_context,
+            destination_addresses=destination_addresses,
+        )
+        counter = Counter()
+        await subject(context, counter.task)
+
+        assert message.headers.get("message_type") == "dict"
+        assert counter.total == 1
+
+    async def test_not_overwriting_message_type_if_it_exists(self):
+        subject = SetDefaultHeadersStep()
+        message = LogicalMessage(body={}, headers=MessageHeaders({"message_type": "CustomType"}))
+
+        transaction_context = DefaultTransactionContext()
+        destination_addresses = DestinationAddresses({"moon", "sun"})
+        context = OutgoingStepContext(
+            message=message,
+            transaction_context=transaction_context,
+            destination_addresses=destination_addresses,
+        )
+        counter = Counter()
+        await subject(context, counter.task)
+
+        assert message.headers.get("message_type") == "CustomType"
+        assert counter.total == 1
+
     async def test_using_a_custom_message_id_generator(self):
         subject = SetDefaultHeadersStep(message_id_generator=lambda message: "message_1")
         message = LogicalMessage(body={}, headers=MessageHeaders())

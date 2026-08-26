@@ -6,6 +6,7 @@ from typing import Any
 from mersal.logging import Logger
 from mersal.messages import TransportMessage
 from mersal.pipeline import IncomingStepContext
+from mersal.pipeline.step_context import RETRY_ATTEMPTS_KEY
 from mersal.transport import TransactionContext
 from mersal.transport.transaction_scope import TransactionScope
 from mersal.types import AsyncAnyCallable
@@ -50,6 +51,7 @@ class DefaultRetryStep(RetryStep):
                 return
             self.logger.exception("retry.error", message=transport_message.message_label, message_id=message_id)
             await self.error_tracker.register_error(message_id, e)
+            context.save_keys(RETRY_ATTEMPTS_KEY, len(await self.error_tracker.get_exceptions(message_id)))
 
             if self.fail_fast_checker.should_fail_fast(message_id, e):
                 self.logger.exception("retry.fail_fast", message=transport_message.message_label, message_id=message_id)

@@ -15,7 +15,7 @@ class TransportMessage:
         t = self.headers.message_type
         if not t:
             try:
-                t = str(type(self.body))
+                t = type(self.body).__name__
             except Exception:  # noqa: BLE001
                 t = "unknown"
         return f"{t}/{self.headers.message_id}"

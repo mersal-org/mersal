@@ -5,6 +5,9 @@ __all__ = ("StepContext",)
 
 T = TypeVar("T")
 
+STEP_EXECUTION_COUNT_KEY = "step_execution_count"
+RETRY_ATTEMPTS_KEY = "retry_attempts"
+
 
 class StepContext:
     step_context_key = "step_context"

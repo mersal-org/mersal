@@ -31,6 +31,9 @@ class SetDefaultHeadersStep:
         if not headers.get("message_id"):
             headers["message_id"] = self.message_id_generator(logical_message)
 
+        if not headers.get("message_type"):
+            headers["message_type"] = type(logical_message.body).__name__
+
         if not headers.get("sent_time"):
             headers["sent_time"] = datetime.now(UTC).isoformat()
 
