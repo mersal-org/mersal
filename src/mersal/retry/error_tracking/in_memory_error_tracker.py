@@ -2,21 +2,29 @@ from collections import defaultdict
 from collections.abc import Sequence
 from typing import Any
 
+from mersal.logging import Logger, NullLogger
+
 from .error_tracker import ErrorTracker
 
 __all__ = ("InMemoryErrorTracker",)
 
 
 class InMemoryErrorTracker(ErrorTracker):
-    def __init__(self, maximum_failure_times: int) -> None:
+    def __init__(self, maximum_failure_times: int, logger: Logger | None = None) -> None:
         self.errors: dict[Any, list[Exception]] = defaultdict(list)
         self.maximum_failure_times = maximum_failure_times
         self.marked_as_final: set[Any] = set()
+        self.logger = logger if logger is not None else NullLogger()
 
     async def register_error(self, message_id: Any, exception: Exception) -> None:
         self.errors[message_id].append(exception)
 
     async def clean_up(self, message_id: Any) -> None:
+        self.logger.debug(
+            "error_tracker.clean_up",
+            message_id=message_id,
+            number_of_tracked_errors=len(self.errors.get(message_id, [])),
+        )
         self.errors.pop(message_id, None)
 
     async def has_failed_too_many_times(self, message_id: Any) -> bool:

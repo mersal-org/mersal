@@ -43,6 +43,7 @@ class DefaultRetryStep(RetryStep):
         try:
             await next_step()
             transaction_context.set_result(commit=True, ack=True)
+            await self.error_tracker.clean_up(message_id)
         except Exception as e:
             if self.pdb_on_exception:
                 pdb.post_mortem(sys.exc_info()[2])

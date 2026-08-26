@@ -199,6 +199,96 @@ class TestDefaultRetryStrategy:
         assertion_helper.assert_committed(True)
         assertion_helper.assert_ack(True)
 
+    async def test_cleans_up_error_tracker_when_message_succeeds(
+        self,
+        run_subject_process,
+        message_id: uuid.UUID,
+        error_tracker: ErrorTrackerTestDouble,
+    ):
+        async def next_step():
+            pass
+
+        await run_subject_process(next_step)
+
+        assert message_id in error_tracker.clean_up_spy
+
+    async def test_cleans_up_error_tracker_after_previously_failed_message_eventually_succeeds(
+        self,
+        subject: DefaultRetryStep,
+        transport_message: TransportMessage,
+        message_id: uuid.UUID,
+        error_tracker: ErrorTrackerTestDouble,
+    ):
+        # Regression test: a message that fails once (e.g. a transient upstream
+        # error) and is later redelivered and succeeds must not leave its
+        # exception behind in the error tracker forever. Each retry attempt is
+        # a fresh delivery with its own transaction context, but the same
+        # message_id, so we model that here with two separate step contexts.
+        async def failing_next_step():
+            raise ValueError("transient upstream failure")
+
+        first_attempt_transaction_context = DefaultTransactionContext()
+        first_attempt_context = IncomingStepContext(
+            message=transport_message,
+            transaction_context=first_attempt_transaction_context,
+        )
+        await subject(first_attempt_context, failing_next_step)
+        await first_attempt_transaction_context.complete()
+
+        assert await error_tracker.get_exceptions(message_id)
+
+        async def succeeding_next_step():
+            pass
+
+        second_attempt_transaction_context = DefaultTransactionContext()
+        second_attempt_context = IncomingStepContext(
+            message=transport_message,
+            transaction_context=second_attempt_transaction_context,
+        )
+        await subject(second_attempt_context, succeeding_next_step)
+        await second_attempt_transaction_context.complete()
+
+        assert message_id in error_tracker.clean_up_spy
+
+    async def test_does_not_leak_error_tracker_entries_across_many_fail_then_succeed_cycles(
+        self,
+        error_handler: DeadletterQueueErrorHandler,
+        fail_fast_checker: DefaultFailFastChecker,
+    ):
+        # Uses the real InMemoryErrorTracker rather than the spying test double,
+        # since this asserts on its actual internal dict rather than on whether
+        # clean_up was called. Without the fix, this dict grows by one entry per
+        # message that ever failed once and later succeeded - unbounded for a
+        # long-running worker.
+        real_error_tracker = InMemoryErrorTracker(maximum_failure_times=5)
+        strategy = DefaultRetryStrategy(real_error_tracker, error_handler, fail_fast_checker, logger=NullLogger())
+        subject = strategy.get_retry_step()
+
+        async def failing_next_step():
+            raise ValueError("transient upstream failure")
+
+        async def succeeding_next_step():
+            pass
+
+        for _ in range(500):
+            message = TransportMessageBuilder.build()
+
+            failing_transaction_context = DefaultTransactionContext()
+            await subject(
+                IncomingStepContext(message=message, transaction_context=failing_transaction_context),
+                failing_next_step,
+            )
+            await failing_transaction_context.complete()
+
+            succeeding_transaction_context = DefaultTransactionContext()
+            await subject(
+                IncomingStepContext(message=message, transaction_context=succeeding_transaction_context),
+                succeeding_next_step,
+            )
+            await succeeding_transaction_context.complete()
+
+        assert real_error_tracker.errors == {}
+
     async def test_fail_fast_exceptions(
         self,
         run_subject_process,

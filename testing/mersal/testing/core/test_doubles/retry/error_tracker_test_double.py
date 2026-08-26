@@ -10,13 +10,14 @@ __all__ = ("ErrorTrackerTestDouble",)
 class ErrorTrackerTestDouble(InMemoryErrorTracker):
     def __init__(self, maximum_failure_times: int = 5) -> None:
         super().__init__(maximum_failure_times=maximum_failure_times)
+        self.clean_up_spy: list[uuid.UUID] = []
 
     async def register_error(self, message_id: uuid.UUID, exception: Exception) -> None:
         await super().register_error(message_id, exception)
         self._registered_errors_spy = deepcopy(self.errors)
 
     async def clean_up(self, message_id: uuid.UUID) -> None:
-        pass
+        self.clean_up_spy.append(message_id)
 
     async def has_failed_too_many_times(self, message_id: uuid.UUID) -> bool:
         return await super().has_failed_too_many_times(message_id)

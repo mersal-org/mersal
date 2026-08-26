@@ -79,7 +79,7 @@ class DefaultPlugin(Plugin):
         configurator.decorate(HandlerActivator, decorate_handler_activator_with_internal_handlers)
         self._register_default_dependency_if_needed(
             ErrorTracker,
-            lambda d: InMemoryErrorTracker(d.get(RetryStrategySettings).max_no_of_retries),
+            lambda d: InMemoryErrorTracker(d.get(RetryStrategySettings).max_no_of_retries, logger=d.get(Logger)),  # type: ignore[type-abstract]
         )
 
         self._register_default_dependency_if_needed(
