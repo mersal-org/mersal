@@ -269,7 +269,12 @@ class Mersal:
                 await self._exit_stack.aclose()
         finally:
             self._exit_stack = None
-            for hook in self.on_shutdown_hooks:
+            # Reverse of startup order: a hook that opens a scope (e.g. a periodic
+            # task's task group) nests it on the current task's cancel-scope stack on
+            # top of any scope opened by an earlier hook. Closing in the same forward
+            # order would try to exit an outer scope while a later hook's inner one is
+            # still open, which anyio rejects.
+            for hook in reversed(self.on_shutdown_hooks):
                 await AsyncCallable(hook)()
 
     async def __aenter__(self) -> Self:

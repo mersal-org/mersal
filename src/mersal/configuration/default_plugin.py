@@ -4,6 +4,9 @@ from mersal.configuration.standard_configurator import (
     StandardConfiguratorResolver,
 )
 from mersal.lifespan import DefaultLifespanHandler, LifespanHandler
+from mersal.lifespan.lifespan_hooks_registration_plugin import (
+    LifespanHooksRegistrationPluginConfig,
+)
 from mersal.logging import Logger
 from mersal.logging.null_logger import NullLogger
 from mersal.persistence.not_implemented import NotImplementedSubscriptionStorage
@@ -48,8 +51,12 @@ from mersal.serialization import (
     Serializer,
 )
 from mersal.subscription import InternalHandlersActivator, SubscriptionStorage
+from mersal.threading.anyio.anyio_periodic_async_task_factory import (
+    AnyIOPeriodicTaskFactory,
+)
 from mersal.topic import DefaultTopicNameConvention, TopicNameConvention
 from mersal.transport import Transport
+from mersal.utils.sync import AsyncCallable
 from mersal.workers import DefaultWorkerBackoffStrategy, WorkerBackoffStrategy, WorkerFactory
 from mersal.workers.anyio import AnyioWorkerFactory
 
@@ -77,10 +84,21 @@ class DefaultPlugin(Plugin):
             return InternalHandlersActivator(handler_activator, subscription_storage)
 
         configurator.decorate(HandlerActivator, decorate_handler_activator_with_internal_handlers)
-        self._register_default_dependency_if_needed(
-            ErrorTracker,
-            lambda d: InMemoryErrorTracker(d.get(RetryStrategySettings).max_no_of_retries, logger=d.get(Logger)),  # type: ignore[type-abstract]
-        )
+        if not configurator.is_registered(ErrorTracker):
+            configurator.register(
+                ErrorTracker,
+                lambda d: InMemoryErrorTracker(
+                    d.get(RetryStrategySettings).max_no_of_retries,  # type: ignore[type-abstract]
+                    logger=d.get(Logger),  # type: ignore[type-abstract]
+                    periodic_task_factory=AnyIOPeriodicTaskFactory(logger=d.get(Logger)),  # type: ignore[type-abstract]
+                    max_age_seconds=d.get(RetryStrategySettings).error_tracking_max_age_seconds,  # type: ignore[type-abstract]
+                    sweep_interval_seconds=d.get(RetryStrategySettings).error_tracking_sweep_interval_seconds,  # type: ignore[type-abstract]
+                ),
+            )
+            LifespanHooksRegistrationPluginConfig(
+                on_startup_hooks=[lambda config: AsyncCallable(config.get(ErrorTracker).start)],  # type: ignore[type-abstract, attr-defined]  # ty: ignore[unresolved-attribute]
+                on_shutdown_hooks=[lambda config: AsyncCallable(config.get(ErrorTracker).stop)],  # type: ignore[type-abstract, attr-defined]  # ty: ignore[unresolved-attribute]
+            ).plugin(configurator)
 
         self._register_default_dependency_if_needed(
             ErrorHandler,

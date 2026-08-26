@@ -59,3 +59,34 @@ class TestInMemoryErrorTracker(ErrorTrackerBaseTests):
             ("error_tracker.clean_up", {"message_id": message_id, "number_of_tracked_errors": 2}),
         ]
         assert not await subject.get_exceptions(message_id)
+
+    async def test_sweep_evicts_entries_older_than_max_age(self, monkeypatch):
+        subject = InMemoryErrorTracker(maximum_failure_times=10, max_age_seconds=60.0)
+        m1 = uuid4()
+        m2 = uuid4()
+
+        clock = [1_000.0]
+        monkeypatch.setattr("mersal.retry.error_tracking.in_memory_error_tracker.time.monotonic", lambda: clock[0])
+
+        await subject.register_error(m1, Exception())
+        await subject.mark_as_final(m1)
+        clock[0] += 30.0
+        await subject.register_error(m2, Exception())
+
+        # m1's last error is now 90s old (> max_age=60s), m2's is fresh.
+        clock[0] += 60.0
+        await subject._sweep()
+
+        assert not await subject.get_exceptions(m1)
+        assert not await subject.has_failed_too_many_times(m1)
+        assert len(await subject.get_exceptions(m2)) == 1
+
+    async def test_sweep_is_noop_without_max_age_configured(self):
+        subject = InMemoryErrorTracker(maximum_failure_times=10)
+        message_id = uuid4()
+        await subject.register_error(message_id, Exception())
+
+        await subject.start()
+        await subject.stop()
+
+        assert len(await subject.get_exceptions(message_id)) == 1

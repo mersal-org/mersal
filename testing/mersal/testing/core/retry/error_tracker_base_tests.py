@@ -87,3 +87,13 @@ class ErrorTrackerBaseTests:
 
         assert len(await subject.get_exceptions(m1)) == 1
         assert await subject.has_failed_too_many_times(m1)
+
+    async def test_clean_up_clears_final_marker(self, error_tracker_maker: ErrorTrackerMaker) -> None:
+        subject = error_tracker_maker(maximum_failure_times=10)
+        m1 = uuid4()
+        await subject.register_error(m1, Exception())
+        await subject.mark_as_final(m1)
+
+        await subject.clean_up(m1)
+
+        assert not await subject.has_failed_too_many_times(m1)

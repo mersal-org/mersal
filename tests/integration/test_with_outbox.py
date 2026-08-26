@@ -1,8 +1,10 @@
-from asyncio import sleep
+from functools import partial
 
+import anyio
 import pytest
 
 from mersal.activation import BuiltinHandlerActivator
+from mersal.core import run_apps
 from mersal.core.app import Mersal
 from mersal.idempotency import MessageTracker
 from mersal.outbox.config import OutboxConfig
@@ -65,16 +67,19 @@ class TestOutboxIntegration:
             OutboxPlugin(outbox_config),
         ]
         app = Mersal("m1", activator, plugins=plugins)
+        stop = anyio.Event()
 
-        await app.start()
-        message = MessageThatSendsMultipleMessages(sent_messages=[BasicMessageA(), BasicMessageB()])
-        await app.send_local(message)
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(partial(run_apps, [app], stop=stop, handle_signals=False))
+            await anyio.sleep(0.1)
+            message = MessageThatSendsMultipleMessages(sent_messages=[BasicMessageA(), BasicMessageB()])
+            await app.send_local(message)
 
-        await sleep(0.5)
-        assert len(outbox_storage.saved_outgoing_messages) == 1
-        assert len(outbox_storage.saved_outgoing_messages[0]) == 2
-        await sleep(1.1)
-        assert len(outbox_storage.saved_outgoing_messages) == 0
-        assert handler_for_message_a.count == 1
-        assert handler_for_message_b.count == 1
-        await app.stop()
+            await anyio.sleep(0.5)
+            assert len(outbox_storage.saved_outgoing_messages) == 1
+            assert len(outbox_storage.saved_outgoing_messages[0]) == 2
+            await anyio.sleep(1.1)
+            assert len(outbox_storage.saved_outgoing_messages) == 0
+            assert handler_for_message_a.count == 1
+            assert handler_for_message_b.count == 1
+            stop.set()
