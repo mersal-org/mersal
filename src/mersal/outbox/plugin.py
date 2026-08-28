@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from mersal.configuration import StandardConfigurator
 from mersal.lifespan.lifespan_hooks_registration_plugin import (
     LifespanHooksRegistrationPluginConfig,
@@ -22,6 +24,7 @@ from mersal.threading.anyio.anyio_periodic_async_task_factory import (
     AnyIOPeriodicTaskFactory,
 )
 from mersal.transport.transport import Transport
+from mersal.types import LifespanHook
 from mersal.utils.sync import AsyncCallable
 
 __all__ = ("OutboxPlugin",)
@@ -61,17 +64,34 @@ class OutboxPlugin(Plugin):
             return self._outbox_storage
 
         configurator.register(OutboxStorage, register_outbox_storage)
-        configurator.register(OutboxForwarder, register_forwarder)
         configurator.decorate(IncomingPipeline, decorate_pipeline)
         configurator.decorate(Transport, decorate_transport)
 
-        startup_hooks = [
-            lambda config: AsyncCallable(self._outbox_storage),
-            lambda config: AsyncCallable(config.get(OutboxForwarder).start),
-        ]
-        shutdown_hooks = [
-            lambda config: AsyncCallable(config.get(OutboxForwarder).stop),
-        ]
+        if configurator.send_only:
+            # In send-only mode there's no incoming pipeline, so OutboxIncomingStep
+            # never sets the "use-outbox" flag and OutboxTransportDecorator never
+            # buffers anything. Skip starting the storage and the forwarder task -
+            # they'd just hold a connection open for no benefit.
+            def log_skip(configurator: StandardConfigurator) -> LifespanHook:
+                async def _log() -> None:
+                    configurator.get(Logger).info(  # type: ignore[type-abstract]
+                        "outbox.send_only.skip",
+                        reason="app is send_only; outbox storage and forwarder are not started",
+                    )
+
+                return _log
+
+            startup_hooks: list[Callable[[StandardConfigurator], LifespanHook]] = [log_skip]
+            shutdown_hooks: list[Callable[[StandardConfigurator], LifespanHook]] = []
+        else:
+            configurator.register(OutboxForwarder, register_forwarder)
+            startup_hooks = [
+                lambda config: AsyncCallable(self._outbox_storage),
+                lambda config: AsyncCallable(config.get(OutboxForwarder).start),
+            ]
+            shutdown_hooks = [
+                lambda config: AsyncCallable(config.get(OutboxForwarder).stop),
+            ]
 
         plugin = LifespanHooksRegistrationPluginConfig(
             on_startup_hooks=startup_hooks,

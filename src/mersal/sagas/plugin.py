@@ -19,8 +19,11 @@ from mersal.sagas.load_saga_data_step import LoadSagaDataStep
 from mersal.utils.sync import AsyncCallable
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from mersal.configuration import StandardConfigurator
     from mersal.sagas.config import SagaConfig
+    from mersal.types import LifespanHook
 
 __all__ = ("SagaPlugin",)
 
@@ -50,7 +53,22 @@ class SagaPlugin(Plugin):
 
         configurator.decorate(IncomingPipeline, decorate_pipeline)
 
-        hooks = [lambda _: AsyncCallable(self._storage)]
+        if configurator.send_only:
+            # In send-only mode there's no incoming pipeline, so LoadSagaDataStep
+            # is never invoked. Skip starting the saga storage - it'd just hold a
+            # connection open for no benefit.
+            def log_skip(configurator: StandardConfigurator) -> LifespanHook:
+                async def _log() -> None:
+                    configurator.get(Logger).info(  # type: ignore[type-abstract]
+                        "saga.send_only.skip",
+                        reason="app is send_only; saga storage is not started",
+                    )
+
+                return _log
+
+            hooks: list[Callable[[StandardConfigurator], LifespanHook]] = [log_skip]
+        else:
+            hooks = [lambda _: AsyncCallable(self._storage)]
 
         plugin = LifespanHooksRegistrationPluginConfig(on_startup_hooks=hooks).plugin
         plugin(configurator)

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from mersal.lifespan import LifespanHandler
+from mersal.logging import Logger
 from mersal.plugins import Plugin
 
 if TYPE_CHECKING:
@@ -39,9 +40,15 @@ class AutosubscribePlugin(Plugin):
     def __call__(self, configurator: StandardConfigurator) -> None:
         def decorate(configurator: StandardConfigurator) -> Any:
             lifespan_handler: LifespanHandler = configurator.get(LifespanHandler)  # type: ignore[type-abstract]
-            app: Mersal = configurator.mersal
 
-            lifespan_handler.register_on_startup_hook(self._subscribe(app))
+            if configurator.send_only:
+                # In send-only mode there's no worker/input queue to ever receive
+                # what gets routed to this app's address, so subscribing would
+                # just register a subscriber address that nothing drains.
+                lifespan_handler.register_on_startup_hook(self._log_skip(configurator))
+            else:
+                app: Mersal = configurator.mersal
+                lifespan_handler.register_on_startup_hook(self._subscribe(app))
 
             return lifespan_handler
 
@@ -57,3 +64,12 @@ class AutosubscribePlugin(Plugin):
                 await app.subscribe(e)
 
         return subscribe
+
+    def _log_skip(self, configurator: StandardConfigurator) -> LifespanHook:
+        async def log_skip() -> None:
+            configurator.get(Logger).info(  # type: ignore[type-abstract]
+                "autosubscribe.send_only.skip",
+                reason="app is send_only; there is no worker to receive routed events",
+            )
+
+        return log_skip
