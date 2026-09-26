@@ -1,6 +1,6 @@
-from asyncio import iscoroutinefunction
 from collections.abc import Awaitable, Callable
 from functools import partial
+from inspect import iscoroutinefunction
 from typing import ParamSpec, TypeGuard, TypeVar, cast
 
 __all__ = ("is_async_callable",)
@@ -11,7 +11,7 @@ T = TypeVar("T")
 
 
 def is_async_callable(value: Callable[P, T]) -> TypeGuard[Callable[P, Awaitable[T]]]:
-    """Extend :func:`asyncio.iscoroutinefunction` to additionally detect async :func:`functools.partial` objects and
+    """Extend :func:`inspect.iscoroutinefunction` to additionally detect async :func:`functools.partial` objects and
     class instances with ``async def __call__()`` defined.
 
     Args:

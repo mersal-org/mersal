@@ -32,7 +32,10 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = []
+exclude_patterns = [
+    # TODO: re-add to the contrib toctree once mersal_sqlalchemy releases sqlalchemy_timeout_manager
+    "reference/contrib/sqlalchemy/timeouts.rst",
+]
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
@@ -75,6 +78,7 @@ nitpick_ignore: list[tuple[str, str]] = [
     ("py:class", "mersal.transport.file_system.FileSystemTransport"),
     ("py:class", "mersal.transport.base_transport.BaseTransport"),
     ("py:class", "mersal.pipeline.pipeline_invoker.PipelineInvoker"),
+    ("py:class", "mersal.pipeline.incoming_step.IncomingStep"),
     ("py:class", "mersal.pipeline.message_context.MessageContext"),
     ("py:class", "pipeline.MessageContext"),
     ("py:class", "mersal.pipeline.send.set_default_headers_step.MessageIdGenerator"),

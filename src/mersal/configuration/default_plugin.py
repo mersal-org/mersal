@@ -89,11 +89,11 @@ class DefaultPlugin(Plugin):
             configurator.register(
                 ErrorTracker,
                 lambda d: InMemoryErrorTracker(
-                    d.get(RetryStrategySettings).max_no_of_retries,  # type: ignore[type-abstract]
+                    d.get(RetryStrategySettings).max_no_of_retries,
                     logger=d.get(Logger),  # type: ignore[type-abstract]
                     periodic_task_factory=AnyIOPeriodicTaskFactory(logger=d.get(Logger)),  # type: ignore[type-abstract]
-                    max_age_seconds=d.get(RetryStrategySettings).error_tracking_max_age_seconds,  # type: ignore[type-abstract]
-                    sweep_interval_seconds=d.get(RetryStrategySettings).error_tracking_sweep_interval_seconds,  # type: ignore[type-abstract]
+                    max_age_seconds=d.get(RetryStrategySettings).error_tracking_max_age_seconds,
+                    sweep_interval_seconds=d.get(RetryStrategySettings).error_tracking_sweep_interval_seconds,
                 ),
             )
             LifespanHooksRegistrationPluginConfig(
