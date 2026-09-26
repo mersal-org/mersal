@@ -25,6 +25,13 @@ class TransportBridge(Transport):
         self._address_transport_mapping = address_transport_mapping
         self.address = self._transport.address
 
+    @property
+    def supports_deferral(self) -> bool:
+        # A deferred message may go through any of the bridged transports.
+        return self._transport.supports_deferral and all(
+            t.supports_deferral for t in self._address_transport_mapping.values()
+        )
+
     async def create_queue(self, address: str) -> None:
         await self._transport.create_queue(address)
 

@@ -9,6 +9,12 @@ __all__ = ("Transport",)
 class Transport(Protocol):
     address: str
 
+    @property
+    def supports_deferral(self) -> bool:
+        """Whether the transport honors the `deferred_until` header by holding the
+        message back until it's due."""
+        return False
+
     async def create_queue(self, address: str) -> None: ...
     async def __call__(self) -> None: ...
 

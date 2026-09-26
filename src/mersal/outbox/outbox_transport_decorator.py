@@ -21,6 +21,10 @@ class OutboxTransportDecorator:
         self.outbox_storage = outbox_storage
         self._outgoing_messages_key = "outgoing-messages"
 
+    @property
+    def supports_deferral(self) -> bool:
+        return self.transport.supports_deferral
+
     async def create_queue(self, address: str) -> None:
         await self.transport.create_queue(address)
 

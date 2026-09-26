@@ -2,6 +2,7 @@ import logging
 import types
 from collections.abc import Iterable, Mapping, Sequence
 from contextlib import AsyncExitStack
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any, Self
 
 from mersal.activation import HandlerActivator
@@ -10,6 +11,7 @@ from mersal.configuration.standard_configurator import (
     InvalidConfigurationError,
     StandardConfigurator,
 )
+from mersal.exceptions import DeferralNotSupportedError
 from mersal.idempotency import IdempotencyConfig, IdempotencyPlugin
 from mersal.lifespan import LifespanHandler
 from mersal.lifespan.autosubscribe import AutosubscribeConfig
@@ -46,6 +48,7 @@ from mersal.serialization import (
     Serializer,
 )
 from mersal.subscription import SubscriptionStorage
+from mersal.timeouts import TimeoutsConfig
 from mersal.topic import TopicNameConvention
 from mersal.transport import (
     AmbientContext,
@@ -93,6 +96,7 @@ class Mersal:
         autosubscribe: AutosubscribeConfig | EmptyType | None = None,
         unit_of_work: UnitOfWorkConfig | None = None,
         outbox: OutboxConfig | None = None,
+        timeouts: TimeoutsConfig | None = None,
         pdb_on_exception: bool | None = None,
         message_id_generator: MessageIdGenerator | None = None,
         max_parallelism: int = 1,
@@ -129,6 +133,8 @@ class Mersal:
             default_router_registration: DefaultRouterRegistrationConfig | None = None,
             unit_of_work: UnitOfWorkConfig | None = None,
             outbox: OutboxConfig | None = None,
+            timeouts: configuration for deferring messages when the transport can't
+                defer natively - see `defer`.
             pdb_on_exception: bool | None = None,
             message_id_generator: MessageIdGenerator | None = None,
             max_parallelism: number of messages to be handled in parallel.
@@ -212,6 +218,10 @@ class Mersal:
 
         if outbox is not None:
             plugins.append(OutboxPlugin(outbox))
+
+        self._timeouts = timeouts
+        if timeouts is not None:
+            plugins.append(timeouts.plugin)
 
         self.logging_config = None
         if logging_config is not None:
@@ -317,6 +327,53 @@ class Mersal:
         addresses = [destination_address]
         await self._send(set(addresses), logical_message)
 
+    async def defer(
+        self,
+        delay: timedelta,
+        command_message: Any,
+        headers: Mapping[str, Any] | None = None,
+        address: str | None = None,
+    ) -> None:
+        """Send a message that should only be delivered after `delay` has elapsed.
+
+        The recipient is `address`, or, when not given, is resolved by the router as
+        in `send`. Passing a `deferred_recipient` header overrides both.
+
+        The message gets the `deferred_until` and `deferred_recipient` headers and is
+        sent:
+
+        1. to the recipient directly, if the transport supports deferral natively
+           (see `Transport.supports_deferral`); otherwise
+        2. to the timeout manager (see `TimeoutsConfig`), which holds it until due.
+
+        Raises:
+            DeferralNotSupportedError: the transport can't defer and no timeout
+                manager is configured.
+        """
+        logical_message = self._create_message(command_message, headers)
+
+        recipient = (
+            logical_message.headers.deferred_recipient
+            or address
+            or await self.router.get_destination_address(logical_message)
+        )
+        await self._defer(delay, recipient, logical_message)
+
+    async def defer_local(
+        self,
+        delay: timedelta,
+        command_message: Any,
+        headers: Mapping[str, Any] | None = None,
+    ) -> None:
+        """Send a message to the address of the configured transport after `delay` has elapsed.
+
+        See `defer`.
+        """
+        logical_message = self._create_message(command_message, headers)
+        recipient = logical_message.headers.deferred_recipient or self.transport.address
+
+        await self._defer(delay, recipient, logical_message)
+
     async def publish(self, event_message: Any, headers: Mapping[str, Any] | None = None) -> None:
         """Publish an event with optional headers."""
 
@@ -355,6 +412,31 @@ class Mersal:
                     self.logger.exception("send.transaction.complete.error", message=logical_message.message_label)
         else:
             await self._invoke_send(destination_addresses, logical_message, transaction_context)
+
+    async def _defer(
+        self,
+        delay: timedelta,
+        recipient: str,
+        logical_message: LogicalMessage,
+    ) -> None:
+        destination_address = self._get_deferral_address(recipient)
+        headers = logical_message.headers
+        headers[MessageHeaders.deferred_until_key] = (datetime.now(UTC) + delay).isoformat()
+        headers[MessageHeaders.deferred_recipient_key] = recipient
+
+        await self._send({destination_address}, logical_message)
+
+    def _get_deferral_address(self, recipient: str) -> str:
+        if self.transport.supports_deferral:
+            return recipient
+        if self._timeouts is not None:
+            return self._timeouts.external_timeout_manager_address or self.transport.address
+        raise DeferralNotSupportedError(
+            detail=(
+                f"{type(self.transport).__name__} can't defer messages natively and no timeout manager "
+                "is configured; see `Mersal(..., timeouts=TimeoutsConfig(...))`"
+            )
+        )
 
     def _get_transaction_context(self) -> TransactionContext | None:
         ambient_transaction_context = AmbientContext().current

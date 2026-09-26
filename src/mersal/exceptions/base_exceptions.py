@@ -2,6 +2,7 @@ from typing import Any
 
 __all__ = (
     "ConcurrencyExceptionError",
+    "DeferralNotSupportedError",
     "MersalExceptionError",
     "MissingDependencyExceptionError",
 )
@@ -47,3 +48,7 @@ class MissingDependencyExceptionError(MersalExceptionError, ImportError):
 
 class ConcurrencyExceptionError(MersalExceptionError):
     pass
+
+
+class DeferralNotSupportedError(MersalExceptionError):
+    """Raised when deferring a message on a transport that can't delay delivery."""

@@ -54,6 +54,7 @@ from mersal.subscription import InternalHandlersActivator, SubscriptionStorage
 from mersal.threading.anyio.anyio_periodic_async_task_factory import (
     AnyIOPeriodicTaskFactory,
 )
+from mersal.timeouts import DisabledTimeoutManager, HandleDeferredMessagesStep, TimeoutManager, TimeoutsConfig
 from mersal.topic import DefaultTopicNameConvention, TopicNameConvention
 from mersal.transport import Transport
 from mersal.utils.sync import AsyncCallable
@@ -149,12 +150,22 @@ class DefaultPlugin(Plugin):
 
         self._register_default_dependency_if_needed(MessageSerializer, register_default_message_serializer)
 
+        self._register_default_dependency_if_needed(TimeoutManager, lambda _: DisabledTimeoutManager())
+
         def register_default_incoming_pipeline(
             config: StandardConfigurator,
         ) -> IncomingPipeline:
+            timeouts_config = config.get_optional(TimeoutsConfig)
             return (
                 DefaultIncomingPipeline()
                 .append(config.get(RetryStep))  # type: ignore[type-abstract]
+                .append(
+                    HandleDeferredMessagesStep(
+                        config.get(TimeoutManager),  # type: ignore[type-abstract]
+                        config.get(Transport),  # type: ignore[type-abstract]
+                        timeouts_config.external_timeout_manager_address if timeouts_config else None,
+                    )
+                )
                 .append(DeserializeIncomingMessageStep(config.get(MessageSerializer)))
                 .append(ActivateHandlersStep(config.get(HandlerActivator)))  # type: ignore[type-abstract]
                 .append(DispatchIncomingMessageStep())

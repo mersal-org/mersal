@@ -7,9 +7,11 @@ API reference
     :maxdepth: 1
 
     app
+    exceptions
     activation
     idempotency
     outbox
+    timeouts
     threading
     transport
     unit_of_work

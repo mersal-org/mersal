@@ -1,5 +1,6 @@
 from collections import UserDict
 from collections.abc import Mapping
+from datetime import datetime
 
 __all__ = ("MessageHeaders",)
 
@@ -20,6 +21,8 @@ class MessageHeaders(UserDict, Mapping[str, str]):
     correlation_id_key = "correlation_id"
     correlation_sequence_key = "correlation_sequence"
     causation_id_key = "causation_id"
+    deferred_until_key = "deferred_until"
+    deferred_recipient_key = "deferred_recipient"
 
     def __setitem__(self, key: str, item: object) -> None:
         super().__setitem__(str(key), str(item))
@@ -44,3 +47,14 @@ class MessageHeaders(UserDict, Mapping[str, str]):
     @property
     def causation_id(self) -> str | None:
         return self.get(self.causation_id_key)
+
+    @property
+    def deferred_until(self) -> datetime | None:
+        """Time (timezone-aware, ISO 8601) before which the message must not be delivered."""
+        value = self.get(self.deferred_until_key)
+        return datetime.fromisoformat(value) if value is not None else None
+
+    @property
+    def deferred_recipient(self) -> str | None:
+        """Address the deferred message must be delivered to once it is due."""
+        return self.get(self.deferred_recipient_key)
