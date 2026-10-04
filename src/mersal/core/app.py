@@ -1,6 +1,6 @@
 import logging
 import types
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from contextlib import AsyncExitStack
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any, Self
@@ -79,6 +79,7 @@ class Mersal:
         worker_factory: WorkerFactory | None = None,
         subscription_storage: SubscriptionStorage | None = None,
         topic_name_convention: TopicNameConvention | None = None,
+        publish_base_types: Collection[type] | None = None,
         on_startup_hooks: Sequence[LifespanHook] | None = None,
         on_shutdown_hooks: Sequence[LifespanHook] | None = None,
         retry_strategy_settings: RetryStrategySettings | None = None,
@@ -117,6 +118,13 @@ class Mersal:
             worker_factory: WorkerFactory | None = None,
             subscription_storage: SubscriptionStorage | None = None,
             topic_name_convention: TopicNameConvention | None = None,
+            publish_base_types: the base classes an event is also published as (to
+                their topics), besides its own type. `publish` normally fans an event
+                out to a topic per class in its MRO, so subscribing to a base class
+                receives every subclass - but that includes library bases (e.g.
+                `msgspec.Struct`) nobody subscribes to. When set, only these bases are
+                published to; an empty collection disables the fan-out. None (the
+                default) keeps every class in the MRO except `object`.
             on_startup_hooks: Sequence[LifespanHook] | None = None,
             on_shutdown_hooks: Sequence[LifespanHook] | None = None,
             retry_strategy_settings: RetryStrategySettings | None = None,
@@ -258,6 +266,7 @@ class Mersal:
         self.worker_factory.app = self
         self.subscription_storage = self.configurator.get(SubscriptionStorage)  # type: ignore[type-abstract]
         self.topic_name_convention = self.configurator.get(TopicNameConvention)  # type: ignore[type-abstract]
+        self._publish_base_types = frozenset(publish_base_types) if publish_base_types is not None else None
         self.pipeline_invoker = self.configurator.get(PipelineInvoker)  # type: ignore[type-abstract]
         self.debug = debug
         self.send_only = send_only
@@ -377,9 +386,12 @@ class Mersal:
     async def publish(self, event_message: Any, headers: Mapping[str, Any] | None = None) -> None:
         """Publish an event with optional headers."""
 
-        topics = [
-            self.topic_name_convention.get_topic_name(cls) for cls in type(event_message).__mro__ if cls is not object
-        ]
+        event_type, *base_types = type(event_message).__mro__
+        if self._publish_base_types is None:
+            base_types = [cls for cls in base_types if cls is not object]
+        else:
+            base_types = [cls for cls in base_types if cls in self._publish_base_types]
+        topics = [self.topic_name_convention.get_topic_name(cls) for cls in (event_type, *base_types)]
 
         await self._inner_publish(topics, event_message, headers)
 

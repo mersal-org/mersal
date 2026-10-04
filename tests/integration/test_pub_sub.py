@@ -287,3 +287,80 @@ class TestPubSubIntegration:
             await sleep(0)
 
         assert parent_handler_calls == 1
+
+    @pytest.mark.parametrize(
+        ("publish_base_types", "expected_parent_handler_calls"),
+        [
+            ({PublishedMessage}, 1),
+            (set(), 0),
+            ({DummyMessage}, 0),
+        ],
+    )
+    async def test_publish_base_types_limits_which_parents_receive_child_events(
+        self,
+        publish_base_types: set[type],
+        expected_parent_handler_calls: int,
+    ):
+        network = InMemoryNetwork()
+        subscription_store = InMemorySubscriptionStore()
+
+        publisher_app = Mersal(
+            "publisher",
+            BuiltinHandlerActivator(),
+            plugins=[InMemoryTransportPluginConfig(network, "test-queue").plugin],
+            subscription_storage=InMemorySubscriptionStorage.centralized(subscription_store),
+            publish_base_types=publish_base_types,
+        )
+
+        activator2 = BuiltinHandlerActivator()
+        parent_handler_calls = 0
+
+        async def parent_handler(message):
+            nonlocal parent_handler_calls
+            parent_handler_calls += 1
+
+        activator2.register(PublishedMessage, lambda _, __: parent_handler)
+        subscriber_app = Mersal(
+            "subscriber",
+            activator2,
+            plugins=[InMemoryTransportPluginConfig(network, "test-queue2").plugin],
+            subscription_storage=InMemorySubscriptionStorage.centralized(subscription_store),
+        )
+
+        await subscriber_app.subscribe(PublishedMessage)
+        await publisher_app.publish(ChildPublishedMessage())
+
+        async with subscriber_app:
+            await sleep(0)
+
+        assert parent_handler_calls == expected_parent_handler_calls
+
+    async def test_publish_base_types_always_publishes_to_the_events_own_topic(self):
+        network = InMemoryNetwork()
+        subscription_store = InMemorySubscriptionStore()
+
+        publisher_app = Mersal(
+            "publisher",
+            BuiltinHandlerActivator(),
+            plugins=[InMemoryTransportPluginConfig(network, "test-queue").plugin],
+            subscription_storage=InMemorySubscriptionStorage.centralized(subscription_store),
+            publish_base_types=set(),
+        )
+
+        activator2 = BuiltinHandlerActivator()
+        handler = DummyMessageHandler()
+        activator2.register(DummyMessage, lambda _, __: handler)
+        subscriber_app = Mersal(
+            "subscriber",
+            activator2,
+            plugins=[InMemoryTransportPluginConfig(network, "test-queue2").plugin],
+            subscription_storage=InMemorySubscriptionStorage.centralized(subscription_store),
+        )
+
+        await subscriber_app.subscribe(DummyMessage)
+        await publisher_app.publish(DummyMessage())
+
+        async with subscriber_app:
+            await sleep(0)
+
+        assert handler.calls == 1
