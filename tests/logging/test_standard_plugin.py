@@ -2,6 +2,7 @@ from contextlib import contextmanager
 
 import pytest
 
+from mersal.logging import LogContext
 from mersal.logging.standard_plugin import _LoggingIncomingStep, _LoggingPipelineInvoker
 from mersal.messages import MessageHeaders, TransportMessage
 from mersal.pipeline import IncomingStepContext
@@ -138,6 +139,60 @@ class TestLoggingPipelineInvoker:
 
         _, _, fields = next(c for c in logger.calls if c[0] == "info" and c[1] == "pipeline.invoke")
         assert fields["step_count"] == 2
+
+    async def test_canonical_line_includes_correlation_headers(self):
+        logger = _LoggerSpy()
+        message = TransportMessage(
+            body=b"payload",
+            headers=MessageHeaders({"message_id": "m2", "correlation_id": "m1", "causation_id": "m1"}),
+        )
+        context = IncomingStepContext(message=message, transaction_context=DefaultTransactionContext())
+
+        async def invoker(context) -> None:
+            return None
+
+        await _LoggingPipelineInvoker(invoker, logger, _noop_pipeline_context)(context)
+
+        _, _, fields = next(c for c in logger.calls if c[0] == "info" and c[1] == "pipeline.invoke")
+        assert fields["correlation_id"] == "m1"
+        assert fields["causation_id"] == "m1"
+
+    async def test_fields_bound_on_the_log_context_reach_the_canonical_line_and_the_binder(self):
+        logger = _LoggerSpy()
+        context = _make_context()
+        binder_calls: list[dict] = []
+
+        async def invoker(context) -> None:
+            log_context = LogContext.current(context)
+            assert log_context is not None
+            log_context.bind(gradebook_id="g1", applied=0)
+
+        subject = _LoggingPipelineInvoker(
+            invoker, logger, _noop_pipeline_context, lambda **fields: binder_calls.append(fields)
+        )
+
+        await subject(context)
+
+        _, _, fields = next(c for c in logger.calls if c[0] == "info" and c[1] == "pipeline.invoke")
+        assert fields["gradebook_id"] == "g1"
+        assert fields["applied"] == 0
+        assert fields["message_id"] == "m1"
+        assert binder_calls == [{"gradebook_id": "g1", "applied": 0}]
+
+    async def test_fields_bound_before_a_failure_still_reach_the_canonical_line(self):
+        logger = _LoggerSpy()
+        context = _make_context()
+
+        async def invoker(context) -> None:
+            LogContext.current(context).bind(gradebook_id="g1")  # type: ignore[union-attr]
+            raise ValueError("boom")
+
+        with pytest.raises(ValueError):
+            await _LoggingPipelineInvoker(invoker, logger, _noop_pipeline_context)(context)
+
+        _, _, fields = next(c for c in logger.calls if c[1] == "pipeline.invoke")
+        assert fields["outcome"] == "error"
+        assert fields["gradebook_id"] == "g1"
 
     async def test_retry_attempts_included_when_present(self):
         logger = _LoggerSpy()

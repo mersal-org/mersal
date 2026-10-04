@@ -1,0 +1,4 @@
+[default]
+extend-ignore-identifiers-re = [
+    "00f067aa0ba902b7",
+]

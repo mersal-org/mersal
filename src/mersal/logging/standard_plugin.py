@@ -5,6 +5,7 @@ import types
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Self
 
+from mersal.logging.log_context import LogContext
 from mersal.logging.logger import Logger
 from mersal.messages import LogicalMessage, TransportMessage
 from mersal.pipeline import (
@@ -36,6 +37,14 @@ __all__ = ("StandardLoggingPlugin",)
 
 
 PipelineContext = Any  # Callable[..., AbstractContextManager]
+"""Wraps a whole pipeline invocation, given its initial log fields - e.g. to
+make them (and anything bound during the invocation) ambient for the logging
+backend. Must undo everything it and `ContextBinder` did on exit, since an
+outgoing invocation runs nested inside its caller's."""
+
+ContextBinder = Any  # Callable[..., None]
+"""Makes fields bound on a `LogContext` mid-invocation ambient for the logging
+backend, i.e. present on every later log line of the invocation."""
 
 
 @contextmanager
@@ -51,12 +60,18 @@ def _extract_incoming_context(context: IncomingStepContext) -> dict[str, Any]:
     transport_message = context.load(TransportMessage)
     if not transport_message:  # type: ignore[truthy-bool]
         return {"message": "unknown", "pipeline": "incoming"}
-    return {
+    headers = transport_message.headers
+    result: dict[str, Any] = {
         "pipeline": "incoming",
         "message": transport_message.message_label,
-        "message_id": str(transport_message.headers.message_id),
-        "message_type": transport_message.headers.message_type or transport_message.message_label,
+        "message_id": str(headers.message_id),
+        "message_type": headers.message_type or transport_message.message_label,
     }
+    if headers.correlation_id is not None:
+        result["correlation_id"] = headers.correlation_id
+    if headers.causation_id is not None:
+        result["causation_id"] = headers.causation_id
+    return result
 
 
 def _extract_outgoing_context(context: OutgoingStepContext) -> dict[str, Any]:
@@ -178,10 +193,17 @@ class _LoggingOutgoingPipeline:
 
 
 class _LoggingPipelineInvoker:
-    def __init__(self, invoker: PipelineInvoker, logger: Logger, pipeline_context: PipelineContext) -> None:
+    def __init__(
+        self,
+        invoker: PipelineInvoker,
+        logger: Logger,
+        pipeline_context: PipelineContext,
+        context_binder: ContextBinder | None = None,
+    ) -> None:
         self._invoker = invoker
         self._logger = logger
         self._pipeline_context = pipeline_context
+        self._context_binder = context_binder
 
     async def __call__(self, context: IncomingStepContext | OutgoingStepContext) -> None:
         if isinstance(context, IncomingStepContext):
@@ -189,6 +211,8 @@ class _LoggingPipelineInvoker:
         else:
             ctx = _extract_outgoing_context(context)
 
+        log_context = LogContext(ctx, binder=self._context_binder)
+        context.save(log_context)
         logger = self._logger.bind(**ctx)
 
         with self._pipeline_context(**ctx):
@@ -206,6 +230,9 @@ class _LoggingPipelineInvoker:
                 step_count = context.load_keys(STEP_EXECUTION_COUNT_KEY) or 0
                 retry_attempts = context.load_keys(RETRY_ATTEMPTS_KEY)
 
+                # Re-bound from the log context rather than `ctx`, so the
+                # canonical line carries whatever was bound during the invocation.
+                logger = self._logger.bind(**log_context.fields)
                 log = logger.error if outcome == "error" else logger.info
                 log(
                     "pipeline.invoke",
@@ -306,15 +333,22 @@ class _LoggingWorkerFactory:
 
 
 class StandardLoggingPlugin(Plugin):
-    def __init__(self, config: LoggingConfig, pipeline_context: PipelineContext | None = None) -> None:
+    def __init__(
+        self,
+        config: LoggingConfig,
+        pipeline_context: PipelineContext | None = None,
+        context_binder: ContextBinder | None = None,
+    ) -> None:
         self._config = config
         self._pipeline_context = pipeline_context or _noop_context
+        self._context_binder = context_binder
 
     def __call__(self, configurator: StandardConfigurator) -> None:
         logger: Logger = self._config.configure()()
         configurator.register(Logger, lambda _: logger)
 
         pipeline_context = self._pipeline_context
+        context_binder = self._context_binder
 
         def decorate_incoming_pipeline(configurator: StandardConfigurator) -> _LoggingIncomingPipeline:
             pipeline = configurator.get(IncomingPipeline)  # type: ignore[type-abstract]
@@ -326,7 +360,7 @@ class StandardLoggingPlugin(Plugin):
 
         def decorate_pipeline_invoker(configurator: StandardConfigurator) -> _LoggingPipelineInvoker:
             invoker = configurator.get(PipelineInvoker)  # type: ignore[type-abstract]
-            return _LoggingPipelineInvoker(invoker, configurator.get(Logger), pipeline_context)  # type: ignore[type-abstract]
+            return _LoggingPipelineInvoker(invoker, configurator.get(Logger), pipeline_context, context_binder)  # type: ignore[type-abstract]
 
         def decorate_error_handler(configurator: StandardConfigurator) -> _LoggingErrorHandler:
             handler = configurator.get(ErrorHandler)  # type: ignore[type-abstract]

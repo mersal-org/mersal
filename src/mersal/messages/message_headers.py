@@ -23,6 +23,8 @@ class MessageHeaders(UserDict, Mapping[str, str]):
     causation_id_key = "causation_id"
     deferred_until_key = "deferred_until"
     deferred_recipient_key = "deferred_recipient"
+    traceparent_key = "traceparent"
+    """W3C Trace Context header (https://www.w3.org/TR/trace-context/). See `mersal.tracing`."""
 
     def __setitem__(self, key: str, item: object) -> None:
         super().__setitem__(str(key), str(item))
@@ -47,6 +49,10 @@ class MessageHeaders(UserDict, Mapping[str, str]):
     @property
     def causation_id(self) -> str | None:
         return self.get(self.causation_id_key)
+
+    @property
+    def traceparent(self) -> str | None:
+        return self.get(self.traceparent_key)
 
     @property
     def deferred_until(self) -> datetime | None:
