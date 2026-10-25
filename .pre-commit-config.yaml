@@ -3,7 +3,7 @@ ci:
   autoupdate_schedule: monthly
 
 default_language_version:
-  python: "3.13"
+  python: "3.15"
 repos:
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.4.0
