@@ -1,5 +1,5 @@
 import itertools
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from functools import partial
@@ -26,7 +26,7 @@ class InMemoryTimeoutManager(TimeoutManager):
         self._messages[next(self._ids)] = (due_time, TransportMessage(message.body, MessageHeaders(message.headers)))
 
     @asynccontextmanager
-    async def get_due_messages(self) -> AsyncIterator[Sequence[DueMessage]]:
+    async def get_due_messages(self) -> AsyncGenerator[Sequence[DueMessage]]:
         now = datetime.now(UTC)
         due = sorted(
             ((due_time, _id, message) for _id, (due_time, message) in self._messages.items() if due_time <= now),

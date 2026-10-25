@@ -22,7 +22,7 @@ from mersal.retry import ErrorHandler
 from mersal.workers import WorkerFactory
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator, Sequence
+    from collections.abc import Generator, Sequence
 
     from mersal.configuration import StandardConfigurator
     from mersal.core.app import Mersal
@@ -48,7 +48,7 @@ backend, i.e. present on every later log line of the invocation."""
 
 
 @contextmanager
-def _noop_context(**kwargs: Any) -> Iterator[None]:
+def _noop_context(**kwargs: Any) -> Generator[None]:
     yield
 
 

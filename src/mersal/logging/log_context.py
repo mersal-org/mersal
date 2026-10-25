@@ -45,4 +45,5 @@ class LogContext:
     def current(context: StepContext) -> LogContext | None:
         """The log context of the invocation `context` belongs to. From a handler,
         pass `message_context.incoming_step_context`."""
-        return context.load(LogContext) or None  # type: ignore[type-abstract]
+        log_context: LogContext | None = context.load(LogContext)
+        return log_context

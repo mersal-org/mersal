@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import Any
 
 from mersal.exceptions import MersalExceptionError
 from mersal.types import AsyncTransactionContextCallable
@@ -8,9 +8,7 @@ __all__ = ("TransactionContextTestDouble",)
 
 class TransactionContextTestDouble:
     def __init__(self) -> None:
-        # We need to use a more specific type for items to match base class
-        # and use cast to handle the mypy typing issue
-        self.items: dict[str | type, Any] = cast("dict[str | type, Any]", {})
+        self.items: dict[str | type, Any] = {}
         self._completion_calls = 0
         self._close_calls = 0
         self._set_result_commit: list[bool] = []
