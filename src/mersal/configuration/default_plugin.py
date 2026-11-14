@@ -97,8 +97,8 @@ class DefaultPlugin(Plugin):
                 ),
             )
             LifespanHooksRegistrationPluginConfig(
-                on_startup_hooks=[lambda config: AsyncCallable(config.get(ErrorTracker).start)],  # type: ignore[type-abstract, attr-defined]  # ty: ignore[unresolved-attribute]
-                on_shutdown_hooks=[lambda config: AsyncCallable(config.get(ErrorTracker).stop)],  # type: ignore[type-abstract, attr-defined]  # ty: ignore[unresolved-attribute]
+                on_startup_hooks=[lambda config: AsyncCallable(config.get(ErrorTracker).start)],  # type: ignore[type-abstract, attr-defined]  # ty: ignore[missing-attribute]
+                on_shutdown_hooks=[lambda config: AsyncCallable(config.get(ErrorTracker).stop)],  # type: ignore[type-abstract, attr-defined]  # ty: ignore[missing-attribute]
             ).plugin(configurator)
 
         self._register_default_dependency_if_needed(
